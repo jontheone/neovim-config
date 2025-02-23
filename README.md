@@ -6,3 +6,7 @@ To Install it sucsessfuly:
 - run the dependencies bash file
 - delete the dependencies file(optional)
 - enjoy
+
+
+# TODO
+- [ ] terminar o arquivo de dependencias
