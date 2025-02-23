@@ -15,6 +15,7 @@ M.data = require("metadata.data")
 M.filters = require("metadata.filters")
 M.pickers = require("metadata.pickers")
 M.funcs = require("metadata.functionalities")
+M.change = require("metadata.metachange")
 
 M.searchMetadataVerbose = function(args)
     args = args or {}
@@ -141,8 +142,6 @@ M.searchLinks = function(args)
     end, {buffer=buf} )
     vim.keymap.set("n", "<esc>", function() vim.api.nvim_win_close(win, true) end, {buffer=buf} )
 end
-
-
 
 M.Main = function(opts)
     local args = {}

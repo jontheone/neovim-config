@@ -4,7 +4,6 @@ local FILE = require("managefile")
 local META = require("metadata")
 local CMD = require("cmdfunc")
 local TOPICMOVE = require("topicmove")
-local MCHANGE = require("metachange")
 local NOTE = require("notefunc")
 
 -- Configurando as funções como comandos do vim
@@ -37,5 +36,5 @@ vim.keymap.set('n', '<Leader>mn', function() META.searchMetadataVerbose({greedy=
 vim.keymap.set('n', '<Leader>ms', ':Meta<CR>', { desc="Metadata search"})
 vim.keymap.set('n', '<Leader>ml', META.searchLinks, { desc="Search with link keyword"})
 vim.keymap.set('n', '<Leader>fm', TOPICMOVE.topicmove, { desc="move .assuntos dir to a topic"})
-vim.keymap.set('n', '<Leader>mc', MCHANGE.metachange, { desc="change metadata fields" })
+vim.keymap.set('n', '<Leader>mc', META.change.metachange, { desc="change metadata fields" })
 vim.keymap.set('n', '<space>n', ":Note<CR>", {desc="New note"})

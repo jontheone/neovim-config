@@ -1,5 +1,5 @@
 -- ao final do sistema o usuario será perguntado se ele acrescentar a lista de inputs existentes ou se ele deseja substituir os metadados já contidos naquele field, não será perguntado caso o field esteja em branco
-local meta = require("metadata")
+local readFileData = require("metadata.data").readFileData
 local M = {}
 
 M.promptInput = function(path, metatag)     
@@ -82,7 +82,7 @@ end
 
 M.metachange = function()
     local path = vim.fn.expand("%:p")
-    local metadata = meta.data.readFileData(path)
+    local metadata = readFileData(path)
     local String = ""
     if string.sub(metadata[1], 1, 1) == "{" then
         for i=1, #metadata do
