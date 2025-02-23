@@ -1,5 +1,17 @@
-local mt = require("metadata")
 local M = {}
+
+M.remove_duplicate = function(arr)
+    local unique = {}
+    local seen = {}
+    for _, value in ipairs(arr) do
+        if not seen[value] then
+            table.insert(unique, value)
+            seen[value] = true
+        end
+    end
+    return unique
+end
+
 
 M.readData = function(Path)
     local metadata = {}

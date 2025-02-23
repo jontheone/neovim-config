@@ -11,83 +11,14 @@
 
 local M = {}
 
--- O json contendo uma lista com todos os caminhos dos metadados e os metadados
-M.JSON = nil
--- Uma lista de chave-valor em que as chaves são os metadados e os valores são listas contendo pelo que eles vão ser filtrados
-M.METADADO = {}
--- lista contendo os possiveis metadados que o usuarios pode escolher para filtrar
-M.METADADOS = {}
--- caminho em que o picker vai ser aberto e que os arquivos serão procurados
-M.PICKER_PATH = nil
--- wether to make a greedy search or not to
-M.GREEDY_SEARCH = true
--- the input of the buffer in case the user uses the non verbose option of input 
-M.BUFFERINPUT = {}
--- wether to make a grep search or a normal search in the files
-M.GREP = false
--- whether to use the toc function
-M.TOC = false
-
 M.data = require("metadata.data")
 M.filters = require("metadata.filters")
 M.pickers = require("metadata.pickers")
 
-M.remove_duplicate = function(arr)
-    local unique = {}
-    local seen = {}
-    for _, value in ipairs(arr) do
-        if not seen[value] then
-            table.insert(unique, value)
-            seen[value] = true
-        end
-    end
-    return unique
-end
-
-M.HandleArgs = function(args) 
-    PICKER_PATH = args["path"] or vim.g.initial_dir
-    if args["search"] == "nongreedy" then
-        M.GREEDY_SEARCH = false
-    end
-    if args["grep"] then
-        M.GREP = true
-    end
-    if args["toc"] then
-        M.TOC = true
-    end
-end
-
 M.searchMetaVerbose = function(args)
-    if args then
-        M.HandleArgs(args)
-    end
-    M.JSON = M.metadata(PICKER_PATH)
-    for _, value in pairs(M.JSON) do
-        for key, _ in pairs(value) do
-            table.insert(METADADOS, key)       
-        end
-    end
-    METADADOS = M.remove_duplicate(METADADOS)
-    table.sort(METADADOS)
-    M.PickerPrompt1()
-end
-
-M.insertToc = function(filter)    
-    local lines = {}
-    table.insert(lines, "# Search result")
-    local paths = filter()
-    for i=1, #paths do
-        local item = paths[i]
-        local filename = item:match("([^/\\]+)$"):match("(.+)%..+$")
-        if item:match(vim.g.wiki_root) then
-            item = item:gsub(vim.g.wiki_root, "~/")
-        end
-        local template = string.format("- [%s](%s)", filename, item)
-        table.insert(lines, template)
-    end
-    bufnr = bufnr or vim.api.nvim_get_current_buf()
-    local row, col = unpack(vim.api.nvim_win_get_cursor(0))
-    vim.api.nvim_buf_set_text(bufnr, row - 1, col, row - 1, col, lines)
+    local path = args["path"] or vim.g.initial_dir
+    local json = M.data.metadata(path)
+    M.pickers.PickerPrompt1({}, {args=args, json=json})
 end
 
 M.SearchMetadata = function(args)
@@ -238,6 +169,19 @@ M.promptMetaData = function(args)
     vim.keymap.set("n", "<esc>", function() vim.api.nvim_win_close(win, true) end, {buffer=buf} )
 end
 
+M.HandleArgs = function(args) 
+    PICKER_PATH = args["path"] or vim.g.initial_dir
+    if args["search"] == "nongreedy" then
+        M.GREEDY_SEARCH = false
+    end
+    if args["grep"] then
+        M.GREP = true
+    end
+    if args["toc"] then
+        M.TOC = true
+    end
+end
+
 M.Main = function(opts)
     local args = {}
     for option, config in opts.args:gmatch("(%S+)=(%S+)") do
@@ -270,7 +214,7 @@ M.Main = function(opts)
 
     -- espaço reservado para args que mudam a funcionalidade do programa
     if args["verbose"] then
-        M.searchMetaVerbose()
+        M.searchMetaVerbose(args)
     elseif args["links"] then
         M.searchLinks()
     else

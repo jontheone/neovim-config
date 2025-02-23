@@ -1,4 +1,3 @@
-local mt = require("metadata")
 local M = {}
 
 -- essa função organiza os inputs do usuario em uma estrutura de dados ideial para ser filtrado por um filtro greedy or non greedy
@@ -7,9 +6,11 @@ local M = {}
     -- *tags inputadas* : {*caminhos que contém essa tag*}
     -- }
 -- }
-M.getFilteringStructure = function()
+M.getFilteringStructure = function(args)
+    local input = args.input
+    local json = args.json
     local caminhos = {}
-    for metadado, tags in pairs(METADADO) do
+    for metadado, tags in pairs(input) do
         local arr = {}
         for i=1, #tags do
             arr[tags[i]] = {}
@@ -23,7 +24,7 @@ M.getFilteringStructure = function()
         end
         for i=1, #tags do
             local tag = tags[i]
-            for path, meta in pairs(JSON) do
+            for path, meta in pairs(json) do
                 local dado = meta[key]
                 if type(dado) == "table" then
                     for j=1, #dado do
@@ -42,9 +43,10 @@ M.getFilteringStructure = function()
     return caminhos
 end
 -- Função que vai finalmente passar os caminhos do metadados pelo filtro que o usuários escolheu e vai devolver uma lista com todos os caminhos para o picker de caminhos
-M.greedyFilter = function()
+M.greedyFilter = function(args)
+    args = args or {}
     local files = {}
-    local filteringStructure = M.getFilteringStructure()
+    local filteringStructure = M.getFilteringStructure(args)
     for _, value in pairs(filteringStructure) do
         for _, paths in pairs(value) do
             vim.list_extend(files, paths)
@@ -55,8 +57,9 @@ M.greedyFilter = function()
     return files
 end
 
-M.nonGreedyFilter = function()
-    local metadata = M.getFilteringStructure()
+M.nonGreedyFilter = function(args)
+    args = args or {}
+    local metadata = M.getFilteringStructure(args)
     local common_paths = nil
 
     for _, info in pairs(metadata) do
