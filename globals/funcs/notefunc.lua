@@ -9,7 +9,7 @@ local state = {
 local template = {
     '<!-- METADATA -->',
     '{',
-    '"file name" : "note"',
+    '"file name" : "note",',
     '"links" : [ "" ],',
     '"tags" : [ "" ],',
     '"type" : "note"',
@@ -88,8 +88,11 @@ M.main = function()
                     end, {buffer=prompt.buf})
                     vim.keymap.set("n", "<esc>", function() vim.api.nvim_win_close(promptWin, true); vim.api.nvim_set_current_win(win) end)
                 else
+                    file[3] = string.gsub(file[3], "(:%s*)(.*)", ": " .. string.format('"%s"', noteName) .. ",")
                     vim.fn.writefile(file, path)
                     print(string.format("Note %s saved at: %s", noteName, NOTE_DIR))
+                    vim.api.nvim_win_close(win, true)
+                    vim.api.nvim_win_close(state.floating.win, true)
                 end
             end, {buffer=buf})
             vim.keymap.set("n", "<esc>", function() vim.api.nvim_win_close(win, true); vim.api.nvim_set_current_win(state.floating.win) end, {buffer=buf})

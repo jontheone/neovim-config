@@ -82,7 +82,7 @@ end
 
 M.metachange = function()
     local path = vim.fn.expand("%:p")
-    local metadata = meta.readFileData(path)
+    local metadata = meta.data.readFileData(path)
     local String = ""
     if string.sub(metadata[1], 1, 1) == "{" then
         for i=1, #metadata do
