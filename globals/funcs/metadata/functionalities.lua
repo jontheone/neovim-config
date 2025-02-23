@@ -18,6 +18,28 @@ M.insertToc = function(filter, params)
     vim.api.nvim_buf_set_text(bufnr, row - 1, col, row - 1, col, lines)
 end
 
-
+M.promptWindow = function(args)
+    args = args or {}
+    local height = args.height or 1
+    local width = args.width or 100
+    local col = args.col or math.floor((vim.o.columns - width) / 2)
+    local row = args.row or math.floor((vim.o.lines - height) / 2)
+    local buf = args.buf or vim.api.nvim_create_buf(false, true)
+    local title = args.title or ""
+    local opts = {
+        relative = "editor",
+        style = "minimal",
+        border = "rounded",
+        title = title,
+        title_pos = "center",
+        height = height,
+        width = width,
+        col = col,
+        row = row
+    }
+    local win = vim.api.nvim_open_win(buf, true, opts)
+    vim.cmd("startinsert")
+    return win, buf
+end
 
 return M
