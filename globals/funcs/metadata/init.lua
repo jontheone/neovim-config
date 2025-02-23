@@ -17,12 +17,14 @@ M.pickers = require("metadata.pickers")
 M.funcs = require("metadata.functionalities")
 
 M.searchMetadataVerbose = function(args)
+    args = args or {}
     local path = args["path"] or vim.g.initial_dir
     local json = M.data.metadata(path)
     M.pickers.PickerPrompt1({}, {args=args, json=json})
 end
 
 M.SearchMetadata = function(args)
+    args = args or {}
     local get_lua_array_from_buffer = function(bufnr)
         bufnr = bufnr
         local line = vim.api.nvim_buf_get_lines(bufnr, 0, 1, false)[1]
@@ -99,6 +101,7 @@ M.SearchMetadata = function(args)
 end
 
 M.searchLinks = function(args)    
+    args = args or {}
     local inputLinksHandle = function(bufnr)
         local line = vim.api.nvim_buf_get_lines(bufnr, 0, 1, false)[1]
         local links = {}
