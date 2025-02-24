@@ -23,20 +23,14 @@ M.template_new_file = function()
     local template = {
         '<!-- METADATA -->',
         '{',
-        '"file name" : "%s",',
-        '"links" : [ "" ],',
+        string.format('"file name" : "%s",', vim.fn.expand("%:t:r")),
+        '"links" : "",',
         '"tags" : [ "" ],',
         '"type" : "normal"',
         '}',
         '<!-- /METADATA -->'
     }
-    local stringed_list = table.concat(template, "/")
-    local formatStr = string.format( stringed_list, vim.fn.expand('%:t:r'))
-    local formated_content = {}
-    for line in formatStr:gmatch("[^/]+") do
-        table.insert( formated_content , line )
-    end
-    vim.api.nvim_buf_set_lines(0, C_position[1], C_position[1], false, formated_content) 
+    vim.api.nvim_buf_set_lines(0, (C_position[1]-1),(C_position[1]-1), true, template) 
 end
 
 M.template_date = function()

@@ -16,6 +16,7 @@ M.filters = require("metadata.filters")
 M.pickers = require("metadata.pickers")
 M.funcs = require("metadata.functionalities")
 M.change = require("metadata.metachange")
+M.push = require("metadata.push")
 
 M.searchMetadataVerbose = function(args)
     args = args or {}

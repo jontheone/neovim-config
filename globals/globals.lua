@@ -29,3 +29,6 @@ vim.api.nvim_set_hl(0, 'bgwin', {bg = "none"})
 vim.cmd("set winhighlight=Normal:bgwin")
 vim.g.initial_dir = vim.fn.getcwd()
 vim.g.wiki_root = "/mnt/d/wikis/wiki/"
+vim.opt.foldmethod = 'marker'
+vim.opt.foldmarker = '<!-- METADATA -->,<!-- /METADATA -->'
+vim.opt.foldenable = true

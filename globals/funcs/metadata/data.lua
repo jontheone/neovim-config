@@ -17,7 +17,7 @@ M.readData = function(Path)
     local metadata = {}
     for name, node in vim.fs.dir(Path) do
         local NODE = node
-        local NAME = Path.. "/"..  name 
+        local NAME = vim.fs.joinpath(Path, name)
         if NODE == "directory" then 
             local data1 = M.readData(NAME)
             metadata[string.format("%s", "_" .. NAME)] = data1

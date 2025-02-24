@@ -90,6 +90,7 @@ M.main = function()
                 else
                     file[3] = string.gsub(file[3], "(:%s*)(.*)", ": " .. string.format('"%s"', noteName) .. ",")
                     vim.fn.writefile(file, path)
+                    vim.fn.writefile(template, PATH_NOTE)
                     print(string.format("Note %s saved at: %s", noteName, NOTE_DIR))
                     vim.api.nvim_win_close(win, true)
                     vim.api.nvim_win_close(state.floating.win, true)

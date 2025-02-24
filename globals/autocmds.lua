@@ -4,9 +4,6 @@ vim.api.nvim_create_autocmd("FileType", {
 		vim.opt_local.formatoptions:append("r") -- `<CR>` in insert mode
 		vim.opt_local.formatoptions:append("o") -- `o` in normal mode
 		vim.opt_local.comments = {"b:>"}
-        vim.opt.foldmethod = 'marker'
-        vim.opt.foldmarker = '<!-- METADATA -->,<!-- /METADATA -->'
-        vim.opt.foldenable = true
 	end,
 })
 vim.api.nvim_create_autocmd("BufNewFile", {
@@ -16,7 +13,7 @@ vim.api.nvim_create_autocmd("BufNewFile", {
             '<!-- METADATA -->',
             '{',
             string.format('"file name" : "%s",', vim.fn.expand("%:t")),
-            '"links" : [ "" ],',
+            '"links" : "",',
             '"tags" : [ "" ],',
             '"type" : "normal"',
             '}',
