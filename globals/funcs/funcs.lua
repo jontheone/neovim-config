@@ -19,7 +19,7 @@ vim.api.nvim_create_user_command('ChangeFile', FILE.ChangeNode, { desc="Muda o n
 vim.api.nvim_create_user_command("Floaterminal", CMD.floaterminal, {})
 vim.api.nvim_create_user_command('Meta', META.Main, { desc="metadata search" , nargs="*"})
 vim.api.nvim_create_user_command('Note', NOTE.main, { desc="New Note"})
-vim.api.nvim_create_user_command('Push', META.push.push, { desc="Push files in the topic dir to the link dir", nargs=1})
+vim.api.nvim_create_user_command('Push', META.push.Push, { desc="Push files in the topic dir to the link dir", nargs=1})
 vim.api.nvim_create_user_command('Index', META.index.CliIndex, { desc="Wiki Index", nargs="*"})
 
 

@@ -10,14 +10,11 @@ vim.api.nvim_create_autocmd("BufNewFile", {
     pattern = {"*.md", "*.markdown"},
     callback = function()
         local template = {
-            '<!-- METADATA -->',
-            '{',
-            string.format('"file name" : "%s",', vim.fn.expand("%:t")),
-            '"links" : "",',
-            '"tags" : [ "" ],',
-            '"type" : "normal"',
-            '}',
-            '<!-- /METADATA -->'
+            '#+file name:',
+            '#+links:',
+            '#+tags:',
+            '#+type:',
+            ' '
         }
         vim.api.nvim_buf_set_lines(0, 0, #template, false, template)
         vim.api.nvim_command("normal! Go")

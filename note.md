@@ -1,10 +1,5 @@
-<!-- METADATA -->
-{
-"file name" : "note",
-"links" : [ "" ],
-"tags" : [ "" ],
-"type" : "note"
-}
-<!-- /METADATA -->
-
-
+#+file name:
+#+links:
+#+tags:
+#+type:
+ 

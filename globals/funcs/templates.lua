@@ -21,14 +21,11 @@ end
 M.template_new_file = function()
     local C_position = vim.api.nvim_win_get_cursor(0)
     local template = {
-        '<!-- METADATA -->',
-        '{',
-        string.format('"file name" : "%s",', vim.fn.expand("%:t:r")),
-        '"links" : "",',
-        '"tags" : [ "" ],',
-        '"type" : "normal"',
-        '}',
-        '<!-- /METADATA -->'
+        string.format('#+file name:%s', vim.fn.expand("%:t")),
+        '#+links:',
+        '#+tags:',
+        '#+type:',
+        ' '
     }
     vim.api.nvim_buf_set_lines(0, (C_position[1]-1),(C_position[1]-1), true, template) 
 end

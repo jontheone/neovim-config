@@ -186,6 +186,19 @@ M.getMetadataByFileName = function(filename)
     end
 end
 
---print(vim.inspect(M.getMetadataByFileName("/mnt/d/wikis/wiki/.assuntos/introdução_citologia.md")))
+M.dataOf = function(filepath, tag)
+    local file = io.open(filepath, "r") or {}
+    local data
+    local index = 0
+    for item in file:lines() do
+        index = index + 1
+        if item:match("^#%+"..tag..":(.*)") then
+            data = item:match("^#%+"..tag..":(.*)")
+            break
+        end
+    end
+    file:close()
+    return {data, index}
+end
 
 return M
