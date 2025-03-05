@@ -166,7 +166,7 @@ M.checkData = function (json)
 end
 
 M.metadata = function(path)
-    if not vim.fn.isdirectory(path) then
+    if vim.fn.isdirectory(path) == 0 then
         error(path .. " is not a directory", 2)
         return
     end

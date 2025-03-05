@@ -20,6 +20,7 @@ vim.api.nvim_create_user_command("Floaterminal", CMD.floaterminal, {})
 vim.api.nvim_create_user_command('Meta', META.Main, { desc="metadata search" , nargs="*"})
 vim.api.nvim_create_user_command('Note', NOTE.main, { desc="New Note"})
 vim.api.nvim_create_user_command('Push', META.push.push, { desc="Push files in the topic dir to the link dir", nargs=1})
+vim.api.nvim_create_user_command('Index', META.index.CliIndex, { desc="Wiki Index", nargs="*"})
 
 
 
@@ -39,3 +40,5 @@ vim.keymap.set('n', '<Leader>ml', META.searchLinks, { desc="Search with link key
 vim.keymap.set('n', '<Leader>fm', TOPICMOVE.topicmove, { desc="move .assuntos dir to a topic"})
 vim.keymap.set('n', '<Leader>mc', META.change.metachange, { desc="change metadata fields" })
 vim.keymap.set('n', '<space>n', ":Note<CR>", {desc="New note"})
+vim.keymap.set('n', '<Leader>e', function() require("metadata.index").linksIndex() end, {desc="Wiki Index"})
+vim.keymap.set('n', '<Leader>ii', function() require("metadata.index").linksIndex({filter=true}) end, {desc="Wiki Index"})

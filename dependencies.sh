@@ -8,6 +8,16 @@ install_homebrew() {
     eval "$(/home/linuxbrew/.linuxbrew/bin/brew shellenv)"
 }
 
+# Function to check if a package is installed
+is_installed() {
+    if command -v "$1" &>/dev/null; then
+        echo "$1 is already installed."
+        return 0
+    else
+        return 1
+    fi
+}
+
 # Check if Homebrew is installed
 if ! command -v brew &>/dev/null; then
     install_homebrew
@@ -17,15 +27,19 @@ fi
 
 # List of dependencies to install via Homebrew
 dependencies=(
-    "ripgrep"
+    "cmake"
     "neovim"
-    "fzf"
+    "ripgrep"
+    "llvm"
 )
 
-# Install each dependency
+# Install each dependency if it's not already installed
 for package in "${dependencies[@]}"; do
-    brew install "$package"
+    if ! is_installed "$package"; then
+        echo "$package not found. Installing..."
+        brew install "$package"
+    fi
 done
 
-echo "All dependencies installed!"
+echo "All dependencies checked and installed if needed!"
 
