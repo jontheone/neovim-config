@@ -1,5 +1,5 @@
 -- ao final do sistema o usuario será perguntado se ele acrescentar a lista de inputs existentes ou se ele deseja substituir os metadados já contidos naquele field, não será perguntado caso o field esteja em branco
-local readFileData = require("metadata.data").readFileData
+--local readFileData = require("metadata.data").readFileData
 local M = {}
 
 M.promptInput = function(path, metatag)     

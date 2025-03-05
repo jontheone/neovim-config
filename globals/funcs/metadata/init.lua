@@ -11,7 +11,6 @@
 
 local M = {}
 
-M.data = require("metadata.datacollect")
 M.filters = require("metadata.filters")
 M.pickers = require("metadata.pickers")
 M.funcs = require("metadata.functionalities")

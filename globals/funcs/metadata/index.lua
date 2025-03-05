@@ -1,5 +1,4 @@
 local dt = require("metadata.datacollect")
-local data = require("metadata.data")
 local pickers = require("telescope.pickers")
 local finders = require("telescope.finders")
 local builtin = require("telescope.builtin")

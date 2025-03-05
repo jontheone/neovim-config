@@ -52,7 +52,7 @@ M.greedyFilter = function(args)
             vim.list_extend(files, paths)
         end
     end
-    local files = require("metadata.data").remove_duplicate(files)
+    local files = require("metadata.datacollect").remove_duplicate(files)
     table.sort(files)
     return files
 end
