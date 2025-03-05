@@ -4,7 +4,7 @@ local builtin = require("telescope.builtin")
 local actions = require("telescope.actions")
 local action_state = require("telescope.actions.state")
 local conf = require("telescope.config").values
-local remove_duplicate = require("metadata.data").remove_duplicate
+local dt = require("metadata.datacollect")
 local greedyFilter = require("metadata.filters").greedyFilter
 local nonGreedyFilter = require("metadata.filters").nonGreedyFilter
 local insertToc = require("metadata.functionalities").insertToc
@@ -21,28 +21,7 @@ M.PickerPrompt2 = function (opts, params)
     local GetMetaChoice = function()
         local metainfo = {}
         for key, _ in pairs(input) do
-            local arr = {}
-            for _ , value in pairs(json) do
-                local data = value[key]
-                if type(data) == "table" then
-                    for i=1, #data do
-                        if data[i] == "" then
-                            goto skip1
-                        else
-                            table.insert(arr, data[i])
-                        end
-                    end
-                    ::skip1::
-                elseif type(data) == "string" then
-                    if data == "" then
-                        goto skip2
-                    else
-                        table.insert(arr, data)
-                    end
-                    ::skip2::
-                end
-            end
-            arr = remove_duplicate(arr)
+            local arr = dt.getLabelDataList(key, vim.g.wiki_root)
             metainfo[key] = arr
         end
         return metainfo
@@ -52,7 +31,6 @@ M.PickerPrompt2 = function (opts, params)
     -- for loop abaixo organiza a lista a cima em um formato que pode ser lido pelo picker
     local results = {}
     for key, value in pairs(metachoice) do
-        table.sort(value)
         for i=1, #value do
             local arr = {}
             arr["metadado"] = key
@@ -86,8 +64,21 @@ M.PickerPrompt2 = function (opts, params)
                     table.insert(input[entry.meta], entry.ordinal)
                 end
                 actions.close(prompt_bufnr)
+                local function getfiles()
+                    local files = {}
+                    for label, datalist in pairs(input) do
+                        if datalist[1] then
+                            local arr = dt.getFilesByLabelData(label, datalist, vim.g.wiki_root, true) 
+                            for i=1, #arr do
+                                table.insert(files, arr[i])
+                            end
+                        end
+                    end
+                    return files
+                end
+                params.json = dt.getMetadataByFileName(getfiles())
                 if args.greedy and args.grep then
-                    M.createGrepPicker({}, greedyFilter(params))
+                    M.createGrepPicker({}, greedyFilter(params), args.path)
                 elseif args.greedy then
                     if args.toc then
                         insertToc(greedyFilter, params)
@@ -95,7 +86,7 @@ M.PickerPrompt2 = function (opts, params)
                         M.createPicker({}, greedyFilter(params), args.path)
                     end
                 elseif args.grep then
-                    M.createGrepPicker({}, nonGreedyFilter(params))
+                    M.createGrepPicker({}, nonGreedyFilter(params), args.path)
                 else
                     if args.toc then
                         insertToc(nonGreedyFilter, params)
@@ -118,16 +109,8 @@ M.PickerPrompt1 = function (opts, params)
     params = params or {}
     opts = opts or {}
     local args = params.args or {}
-    local json = params.json or {}
     local input = {}
-    local options = {}
-    for _, value in pairs(json) do
-        for key, _ in pairs(value) do
-            table.insert(options, key)       
-        end
-    end
-    options = remove_duplicate(options)
-    table.sort(options)
+    local options = dt.getLabelsList()
     pickers.new(opts, {
         prompt_title = "Select the metatag to search",
         finder = finders.new_table{
@@ -186,11 +169,13 @@ M.createPicker = function(opts, metadados, path)
     }):find()
 end
 
-M.createGrepPicker = function(opts, paths)
+M.createGrepPicker = function(opts, paths, path)
+    path = path or vim.g.wiki_root
     opts = opts or {}
     builtin.live_grep({
         prompt_title = "Custom live grep",
         search_dirs = paths,
+        cwd = path
     })
 end
 

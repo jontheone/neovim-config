@@ -11,7 +11,7 @@
 
 local M = {}
 
-M.data = require("metadata.data")
+M.data = require("metadata.datacollect")
 M.filters = require("metadata.filters")
 M.pickers = require("metadata.pickers")
 M.funcs = require("metadata.functionalities")
@@ -22,8 +22,7 @@ M.index = require("metadata.index")
 M.searchMetadataVerbose = function(args)
     args = args or {}
     local path = args["path"] or vim.g.initial_dir
-    local json = M.data.metadata(path)
-    M.pickers.PickerPrompt1({}, {args=args, json=json})
+    M.pickers.PickerPrompt1({}, {args=args})
 end
 
 M.SearchMetadata = function(args)
@@ -71,6 +70,23 @@ M.SearchMetadata = function(args)
             end
         end
         params.input = options
+        local files = {}
+        for label, datalist in pairs(input) do
+            print(vim.inspect(datalist))
+            if type(datalist) == "table" and datalist[1] then
+                local arr = M.data.getFilesByLabelData(label, datalist, vim.g.wiki_root, true) 
+                for i=1, #arr do
+                    table.insert(files, arr[i])
+                end
+            else
+                local arr = M.data.getFilesByLabelData(label, datalist, vim.g.wiki_root, true) 
+                for i=1, #arr do
+                    table.insert(files, arr[i])
+                end
+            end
+        end
+        print(vim.inspect(files))
+        params.json = M.data.getMetadataByFileName(files)
         if (not args.greedy) and (args.grep) then
             M.pickers.createGrepPicker({}, M.filters.greedyFilter(params))
         elseif not args.greedy then
@@ -96,7 +112,7 @@ M.SearchMetadata = function(args)
             error(err, 2)
         end
         vim.api.nvim_win_close(win, true)
-        processInput({args=args, input=input, json=M.data.metadata(args.path or vim.g.initial_dir)}) 
+        processInput({args=args, input=input})
     end, {buffer=buf})
 
     vim.keymap.set("n", "<esc>", function() vim.api.nvim_win_close(win, true) end, {buffer=buf} )
@@ -105,41 +121,15 @@ end
 
 M.searchLinks = function(args)    
     args = args or {}
-    local inputLinksHandle = function(bufnr)
-        local line = vim.api.nvim_buf_get_lines(bufnr, 0, 1, false)[1]
-        local links = {}
-        links.links = {}
-        for item in line:gmatch("[^%s]+") do
-            if item:match("[^%a%d]") then
-            else
-                table.insert(links.links, item)
-            end
-        end
-        return links
-    end
     local win, buf = M.funcs.promptWindow({title=" pesquisa por links "})
     vim.keymap.set({"i", "n"}, "<CR>", function()
-        local params = {}
-        params.args = args
-        params.json = M.data.metadata(args.path or vim.g.initial_dir)
-        params.input = inputLinksHandle(buf)
+        local input = vim.api.nvim_buf_get_lines(buf, 0, 1, false)[1]
+        args.path = args.path or vim.g.wiki_root
         vim.api.nvim_win_close(win, true)
-        if (not args.greedy) and (args.grep) then
-            M.pickers.createGrepPicker({}, M.filters.greedyFilter(params))
-        elseif not args.greedy then
-            if args.toc then
-                M.funcs.insertToc(greedyFilter, params)
-            else
-                M.pickers.createPicker({}, M.filters.greedyFilter(params), args.path or vim.g.initial_dir)
-            end
-        elseif args.grep then
-            M.pickers.createGrepPicker({}, M.filters.nonGreedyFilter(params))
+        if args.grep then
+            M.pickers.createGrepPicker({}, M.data.getFilesByLabelData("links", input, args.path), args.path)
         else
-            if args.toc then
-                M.funcs.insertToc(M.filters.nonGreedyFilter, params)
-            else
-                M.pickers.createPicker({}, M.filters.nonGreedyFilter(params), args.path or vim.g.initial_dir)
-            end
+            M.pickers.createPicker({}, M.data.getFilesByLabelData("links", input, args.path), args.path)
         end
     end, {buffer=buf} )
     vim.keymap.set("n", "<esc>", function() vim.api.nvim_win_close(win, true) end, {buffer=buf} )
