@@ -33,7 +33,7 @@ M.remove_duplicate = function(arr)
 end
 
 M.getLabelsList = function()
-    local output = io.popen([[rg --only-matching --hidden '^#\+.+' /mnt/d/wikis/wiki]])
+    local output = io.popen([[rg --only-matching --hidden '^#\+.+' /mnt/d/wikis/wiki]]) or {}
     local entries = output:read("*a")
     output:close()
     local labels = {}
@@ -50,13 +50,13 @@ M.getLabelsList = function()
 end
 
 M.getLabelDataList = function(label, path)
-    local output = io.popen(string.format([[rg --only-matching --hidden '^#\+%s:.*' %s]], label, path))
+    local output = io.popen(string.format([[rg --only-matching --hidden '^#\+%s:.*' %s]], label, path)) or {}
     local entries = output:read("*a")
     output:close()
     local datalist = {}
     local seen = {}
     for line in entries:gmatch("[^\n]+") do
-        for data in string.gmatch(line, '#%+.+:(.+)') do
+        for data in string.gmatch(line, '#%+.+:(.*)') do
             if data:match(",") then
                 data = data:match("^%s*(.-)%s*$")
                 for item in data:gmatch("[^,]+") do
@@ -67,6 +67,7 @@ M.getLabelDataList = function(label, path)
                     end
                 end
             else
+                data = data:match("^%s*(.-)%s*$")
                 if not seen[data] then
                     table.insert(datalist, data)
                     seen[data] = true 
@@ -74,6 +75,7 @@ M.getLabelDataList = function(label, path)
             end
         end
     end
+    table.sort(datalist)
     return datalist
 end
 
@@ -81,7 +83,7 @@ M.getFilesByLabel = function(label, path)
     if type(label) == 'table' then
         label =  "(".. table.concat(label, "|") ..")"
     end
-    local output = io.popen(string.format([[rg --only-matching --hidden '^#\+%s:.*' -g '*.md' %s]], label, path))
+    local output = io.popen(string.format([[rg --only-matching --hidden '^#\+%s:.*' -g '*.md' %s]], label, path)) or {}
     local entries = output:read("*a")
     output:close()
     local files = {}
@@ -90,17 +92,20 @@ M.getFilesByLabel = function(label, path)
             table.insert(files, item)
         end
     end
+    table.sort(files)
     return files
 end
 
+
 M.getFilesByLabelData = function(label, data, path, greedy)
-    if #data > 10 then
+    if type(data) == "table" and #data > 10 then
         print("CANNOT FILTER MORE THAN 10 DATA AT A TIME")
-        return 
+        return
     end
     greedy = greedy or false
     if type(label) == 'table' then
-        label =  "(".. table.concat(label, "|") ..")"
+        print("CANNOT FILTER MORE THAN ONE LABEL")
+        return
     end
     local cmd
     if greedy == true then
@@ -117,7 +122,7 @@ M.getFilesByLabelData = function(label, data, path, greedy)
             cmd = string.format([[rg --only-matching --hidden '^#\+%s:.*%s.*' -g '*.md' %s]], label, data, path)
         end
     end
-    local output = io.popen(string.format(cmd))
+    local output = io.popen(string.format(cmd)) or {}
     local entries = output:read("*a")
     output:close()
     local files = {}
@@ -126,16 +131,33 @@ M.getFilesByLabelData = function(label, data, path, greedy)
             table.insert(files, item)
         end
     end
+    table.sort(files)
     return files
 end
 
-M.getMetadataByFileName = function(filename)
-    local output = io.popen(string.format([[rg --only-matching --hidden '^#\+.+:.*' %s]], filename))
+M.notSearchByLabelData = function(label, path)
+    if type(label) == 'table' then
+        label =  "(".. table.concat(label, "|") ..")"
+    end
+    local output = io.popen(string.format([[rg --only-matching --hidden '^#\+%s:$' -g '*.md' %s]], label, path)) or {}
     local entries = output:read("*a")
     output:close()
-    local metadata = {}
+    local files = {}
     for line in entries:gmatch("[^\n]+") do
-        for key, pair in line:gmatch("#%+(.+):(.*)") do
+        for item in line:gmatch("([/%a%d%s%p%ç%ã%õ_]+/[%d%a%p%s%ç%õ%ã_]+%.md):") do
+            table.insert(files, item)
+        end
+    end
+    table.sort(files)
+    return files
+end
+
+local parseFileData = function(filename)
+    local file = io.open(filename, "r") or {}
+    local metadata = {}
+    for line in file:lines() do
+        local key, pair = line:match("^#%+(.+):(.*)")
+        if key then
             if pair:match(",") then
                 pair = pair:match("^%s*(.-)%s*$")
                 local values = {}
@@ -148,7 +170,22 @@ M.getMetadataByFileName = function(filename)
             end
         end
     end
+    file:close()
     return metadata
 end
+
+M.getMetadataByFileName = function(filename)
+    if type(filename) == "table" then
+        local metadata = {}
+        for _, item in ipairs(filename) do
+            metadata[item] = parseFileData(item)
+        end
+        return metadata
+    else
+        return parseFileData(filename)
+    end
+end
+
+--print(vim.inspect(M.getMetadataByFileName("/mnt/d/wikis/wiki/.assuntos/introdução_citologia.md")))
 
 return M

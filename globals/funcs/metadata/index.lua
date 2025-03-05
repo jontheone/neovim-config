@@ -1,4 +1,5 @@
-local dt = require("metadata.data")
+local dt = require("metadata.datacollect")
+local data = require("metadata.data")
 local pickers = require("telescope.pickers")
 local finders = require("telescope.finders")
 local builtin = require("telescope.builtin")
@@ -28,46 +29,18 @@ local create_input_buf = function(links)
     local insertbuf = {}
     local letter
     for _, link in ipairs(links) do
-        if link == "NO_LINK" then
+        if link == "" then
+            link = "NO_LINK"
             local blank = string.rep(" ", ((WINDOW_SIZE-11)/2))
             table.insert(insertbuf, string.format("%s[%s]%s", blank, "NO_LINK", blank))
-            --table.insert(insertbuf, " ")
         elseif letter ~= string.sub(link, 1, 1) then
             letter = string.sub(link, 1, 1)
             local blank = string.rep(" ", ((WINDOW_SIZE-5)/2))
-            --table.insert(insertbuf, " ")
             table.insert(insertbuf, string.format("%s[%s]%s", blank, letter, blank))
-            --table.insert(insertbuf, " ")
         end
         table.insert(insertbuf, link)
     end
     return insertbuf
-end
-
-local get_links = function(json)
-    local links = {}
-    for path, value in pairs(json) do
-        local link = value["links"]
-        if type(link) == "table" then
-            if link[1] then
-                for i=1, #link do
-                    if not string.match(link[i], "%.+%g*") then
-                        table.insert(links, link[i])
-                    end
-                end
-            end
-        else
-            if not string.match(link, "%.+%g*") then
-                table.insert(links, link)
-            end
-        end
-    end
-    links = dt.remove_duplicate(links)
-    table.sort(links)
-    if links[1] == "" then
-        links[1] = "NO_LINK"
-    end
-    return links
 end
 
 local add_highlightBuf1 = function(buf)
@@ -75,7 +48,7 @@ local add_highlightBuf1 = function(buf)
     vim.api.nvim_set_hl(0, 'WordChoiceHl', { fg = '#5ca5ed' })
     local patterns = {
         BracketContentHl="\\[.*\\]",
-        WordChoiceHl=[[\w\+\%([^\[]*\]\)\@!]],
+        WordChoiceHl=[[[a-zA-Z0-9.!#_]\+\%([^\[]*\]\)\@!]],
     }
     local lines = vim.api.nvim_buf_get_lines(buf, 0, -1, false)
     for key, pattern in pairs(patterns) do
@@ -213,28 +186,16 @@ local to_alphabet_index = function(num)
     return result.."."
 end
 
-local collapseMdHeaders = function(json, filename, insertbuf, indent)
-    local path
-    for key, _ in pairs(json) do
-        if key:match("([^/\\]+%.md)$") == filename then
-            path = key
-            break
-        end
-    end
-    local file = vim.fn.readfile(path)
+local collapseMdHeaders = function(path, pos, insertbuf, indent)
+    local file = io.open(path, "r") or {}
     local titleIndent = indent
     local num = 0
     local roman = 0
     local alphabet = 0
-    local pos
-    for i, line in ipairs(insertbuf) do
-        if line:match("%s+%s(.+)") == filename then
-            pos = i +1
-            break
-        end
-    end
-    for i, line in ipairs(file) do
-        if line:match("#%s.*") and not (line:match("[#+]%s+(.*)") == "") then
+    local i = 0
+    for line in file:lines() do
+        i = i+1
+        if line:match("#%s.+") then
             local title = line:match("(#+)%s+.*")
             line = line:match("[#+]%s+(.*)")
             if string.sub(title, 1, 3) == "###" then
@@ -255,6 +216,7 @@ local collapseMdHeaders = function(json, filename, insertbuf, indent)
             end
         end
     end
+    file:close()
     return insertbuf
 end
 
@@ -274,10 +236,10 @@ local unpackPackage = function(pack, insertbuf, args)
     return insertbuf
 end
 
-local nofilterPackage = function(files, insertbuf, args)
-    for key, item in pairs(files) do
+local nofilterPackage = function(files, insertbuf)
+    for _, item in ipairs(files) do
         local indent = string.rep(" ", 2)
-        local name = string.match(key, "([^/\\]+%.md)$")
+        local name = string.match(item, "([^/\\]+%.md)$")
         local line = string.format("%s%s", indent, " "..name)
         table.insert(insertbuf, line)
     end
@@ -291,17 +253,17 @@ local createPackage = function(files, tags)
         if tag == "[no tag]" then
             tag = ""
         end
-        for key, value in pairs(files) do
-            local metatag = value.tags
+        for key, value in ipairs(files) do
+            local metatag = dt.getMetadataByFileName(value).tags
             if type(metatag) == "table" then
                 for i=1, #metatag do
                     if metatag[i] == tag then
-                        table.insert(list, key)
+                        table.insert(list, value)
                     end
                 end
             else
                 if metatag == tag then
-                    table.insert(list, key)
+                    table.insert(list, value)
                 end
             end
         end
@@ -314,43 +276,23 @@ local createPackage = function(files, tags)
     return pack
 end
 
-local separateByType = function(json, filter)
+local separateByType = function(files, filter)
     local paths = {}
-    for key, value in pairs(json) do
-        if not value.type or value.type == "" then
-            if filter == "normal" then
-                paths[key] = value
+    for _, value in ipairs(files) do
+        local metadata = dt.getMetadataByFileName(value)
+        if not metadata.type then
+            if filter == "" then
+                table.insert(paths, value)
             end
         else
-            if value.type == filter then
-                paths[key] = value
+            if metadata.type == filter then
+                table.insert(paths, value)
             end
         end
     end
+    table.sort(paths)
     return paths
 end
-
-local filterJsonByLink = function(json, link)
-    local jsonLinks = {}
-    for key, value in pairs(json) do
-        local dado = value.links
-        if type(dado) == "table" then
-            for i=1, #dado do
-                if dado[i] == link then
-                    jsonLinks[key] = value
-                    goto skip
-                end
-            end
-            ::skip::
-        else
-            if dado == link then
-                jsonLinks[key] = value
-            end
-        end
-    end
-    return jsonLinks
-end
-
 
 local handleCursorMovedEvent = function()
     local bufnr = vim.api.nvim_get_current_buf() -- Get current buffer
@@ -424,6 +366,7 @@ local handleMdHeaderInput= function(json, input, buf)
                 local fwin = getBiggestWin()
                 vim.api.nvim_win_set_buf(fwin, filebuffer)
                 vim.api.nvim_win_set_cursor(fwin, {i, 0})
+                vim.api.nvim_set_current_win(fwin)
             end
         end
     end
@@ -458,16 +401,6 @@ local getTagOptions = function(json)
     return tags
 end
 
-local adjustSize = function(int)
-    local buf = STATE.open.buf
-    local win = STATE.open.win
-    if win > 0 and vim.api.nvim_win_is_valid(win) then
-        local config = vim.api.nvim_win_get_config(win)
-        config.height, WIN_OPTS.height = int, int
-        vim.api.nvim_win_set_config(0, config)
-    end
-end
-
 local resizeLeft = function()
     local resize = 10
     local win = STATE.open.win
@@ -489,10 +422,11 @@ end
 local resizeDefault = function()
     local win = STATE.open.win
     if win > 0 and vim.api.nvim_win_is_valid(win) then
-        local resize = 45
+        local hresize = 45
+        local vresize = math.floor((vim.o.lines/2))
         local config = vim.api.nvim_win_get_config(win)
-        config.width = resize
-        WIN_OPTS.width = resize
+        config.width, WIN_OPTS.width = hresize, hresize
+        config.height, WIN_OPTS.height = vresize, vresize
         vim.api.nvim_win_set_config(win, config)
     end
 end
@@ -521,20 +455,20 @@ local handlebufferEsc = function()
     vim.api.nvim_win_hide(STATE.open.win)
 end
 
-local handleExpandHeaderFile = function(json, filename, insertbuf, line)
-        local file_indent = line:match("^(%s+)[^.-]")
-        local cursorline = vim.api.nvim_win_get_cursor(STATE.open.win)[1]
-        local check = string.match(insertbuf[cursorline+1], "^%s*(.-)%s*$")
-        if check:match("[%[~/]") then
-            insertbuf = collapseMdHeaders(json, filename, insertbuf, file_indent..string.rep(" ", 3))
-            vim.bo[STATE.open.buf].modifiable = true
-            vim.api.nvim_buf_set_lines(STATE.open.buf, 0, #insertbuf, false, insertbuf)
-            vim.bo[STATE.open.buf].modifiable = false
-            add_highlightBuf2(STATE.open.buf)
-        end
+local handleExpandHeaderFile = function(path, insertbuf, line)  
+    local file_indent = line:match("^(%s+)[^.-]")
+    local cursorline = vim.api.nvim_win_get_cursor(STATE.open.win)[1]
+    local check = string.match(insertbuf[cursorline+1], "^%s*(.-)%s*$")
+    if check:match("[%[~/]") then
+        insertbuf = collapseMdHeaders(path, (cursorline+1), insertbuf, file_indent..string.rep(" ", 3))
+        vim.bo[STATE.open.buf].modifiable = true
+        vim.api.nvim_buf_set_lines(STATE.open.buf, 0, #insertbuf, false, insertbuf)
+        vim.bo[STATE.open.buf].modifiable = false
+        add_highlightBuf2(STATE.open.buf)
+    end
 end
 
-local handleExpandHeaderTitle = function(json, insertbuf)
+local handleExpandHeaderTitle = function(files , insertbuf)
     local pos_start = vim.api.nvim_win_get_cursor(STATE.open.win)[1]
     local pos_end = -1
     for i=pos_start+1, #insertbuf do
@@ -547,10 +481,23 @@ local handleExpandHeaderTitle = function(json, insertbuf)
     for i, item in ipairs(fileLines) do
         local file_indent = item:match("^(%s+)[^.-]")
         local filename = item:match("%s+%s(.+)")
+        local path
+        for i=1, #files do
+            if string.match(files[i], "([^/\\]+%.md)$") == filename then
+                path = files[i]
+                break
+            end
+        end
+        local pos = -1
+        for i=1, #insertbuf do
+            if string.match(insertbuf[i], "%s+%s(.+)") == filename then
+                pos = i
+            end
+        end
         if filename then
             local check = string.match(fileLines[i+1] or "", "^%s*(.-)%s*$")
             if check:match("[%[~/]") then
-                insertbuf = collapseMdHeaders(json, filename, insertbuf, file_indent..string.rep(" ", 3))
+                insertbuf = collapseMdHeaders(path, pos, insertbuf, file_indent..string.rep(" ", 3))
             end
         end
     end
@@ -560,15 +507,29 @@ local handleExpandHeaderTitle = function(json, insertbuf)
     add_highlightBuf2(STATE.open.buf)
 end
 
-local expandHeader = function(json)
+local expandHeader = function(files)
     local line = vim.api.nvim_get_current_line()
     local insertbuf = vim.api.nvim_buf_get_lines(vim.api.nvim_get_current_buf(), 0, -1, false)
     local filename = line:match("%s+%s(.+)")
+    local path
+    for i=1, #files do
+        if string.match(files[i], "([^/\\]+%.md)$") == filename then
+            path = files[i]
+            break
+        end
+    end
     if line:match("") then
-        handleExpandHeaderFile(json, filename, insertbuf, line)
+        handleExpandHeaderFile(path, insertbuf, line)
     elseif line:match("~/") then
-        handleExpandHeaderTitle(json, insertbuf)
+        handleExpandHeaderTitle(files, insertbuf)
     end 
+end
+
+local resizeHeight = function(int)
+    local win = STATE.open.win
+    local config = vim.api.nvim_win_get_config(win)
+    config.height, WIN_OPTS.height = int, int
+    vim.api.nvim_win_set_config(win, config)
 end
 
 local M = {}
@@ -614,21 +575,21 @@ end
 M.buildBuf2 = function(params)
     params = params or {}
     local args = params.args
-    local json = params.json
     local tags = params.tags
     local link = params.link
+    local files = params.files
     local packages = {}
     if not tags then -- função sem filtro de tags
         local insertbuf = {}
         table.insert(insertbuf, string.format("~/%s", link))
-        insertbuf = nofilterPackage(separateByType(json, "normal"), insertbuf, args)
+        insertbuf = nofilterPackage(separateByType(files, ""), insertbuf)
         table.insert(insertbuf, string.format("~/%s", link .. ":notes"))
-        insertbuf = nofilterPackage(separateByType(json, "note"), insertbuf, args)
+        insertbuf = nofilterPackage(separateByType(files, "note"), insertbuf)
         return insertbuf
     else -- função com filtro de tags
         local insertbuf = {}
-        packages.files = createPackage(separateByType(json, "normal"), tags)
-        packages.notes = createPackage(separateByType(json, "note"), tags)
+        packages.files = createPackage(separateByType(files, ""), tags)
+        packages.notes = createPackage(separateByType(files, "note"), tags)
         table.insert(insertbuf, string.format("~/%s", link))
         insertbuf = unpackPackage(packages.files, insertbuf, args)
         table.insert(insertbuf, string.format("~/%s", link..":notes"))
@@ -641,26 +602,25 @@ M.fileIndex = function(params)
     params = params or {}
     local args = params.args
     local link = params.link
-    local json = params.json
     local buf = vim.api.nvim_create_buf(false, true)
+    local files = dt.getFilesByLabelData("links", link, PATH, true)
     vim.api.nvim_win_set_buf(STATE.open.win, buf)
     STATE.open.buf = buf
     vim.wo.signcolumn = WIN_OPTS.signcolumn
     vim.fn.sign_define("CursorSign", { text = ">"})
-    params.json = filterJsonByLink(json, link)
     if ARGS.filter then
-        M.tagsInput(params)
+        M.tagsInput({args=args, link=link, json=dt.getMetadataByFileName(files), files=files})
     else
-        local insertbuf = M.buildBuf2(params)
+        local insertbuf = M.buildBuf2({args=args, link=link, files=files})
         vim.api.nvim_buf_set_lines(STATE.open.buf, 0, #insertbuf, false, insertbuf)
         vim.bo[STATE.open.buf].modifiable = false
         add_highlightBuf2(STATE.open.buf)
     end
-    adjustSize(math.floor(vim.o.lines*0.76))
+    resizeHeight(math.floor(vim.o.lines*0.76))
 
-    vim.keymap.set("n", "<CR>", function() M.handleBuf2CR(params.json) end, {buffer=buf})
+    vim.keymap.set("n", "<CR>", function() M.handleBuf2CR(files) end, {buffer=buf})
     vim.keymap.set("n", "h", function() M.handleBuf2BS(args) end, {buffer=buf})
-    vim.keymap.set("n", "l", function() expandHeader(params.json) end, {buffer=buf})
+    vim.keymap.set("n", "l", function() expandHeader(files) end, {buffer=buf})
     vim.keymap.set("n", "<C-j>", "zH", {buffer=buf})
     vim.keymap.set("n", "<C-k>", "zL", {buffer=buf})
     vim.keymap.set("n", "<C-h>", function() resizeLeft() end, {buffer=buf})
@@ -670,21 +630,19 @@ M.fileIndex = function(params)
 end
 
 M.buildBuf1 = function(args)
-    adjustSize((vim.o.lines/2))
     resizeDefault()
     -- buffer config
     local buf = vim.api.nvim_create_buf(false, true)
-    local json = dt.metadata("/mnt/d/wikis/wiki - Copia/")
-    local links = get_links(json)
+    local links = dt.getLabelDataList("links", PATH)
     local insertbuf = create_input_buf(links)
     vim.api.nvim_buf_set_lines(buf, 0, (#insertbuf-1), false, insertbuf)
     add_highlightBuf1(buf)
     vim.bo[buf].modifiable = false
 
-    vim.keymap.set("n", "l", function()    
+    vim.keymap.set("n", "<CR>", function()    
         local line = vim.api.nvim_get_current_line()
         if not line:match("%[") and not line:match("%s") then
-            M.fileIndex({args=args, link=line, json=json})
+            M.fileIndex({args=args, link=line})
         end
     end, {buffer=buf})
 
@@ -746,10 +704,11 @@ M.linksIndex = function(args)
     end
 end
 
-M.handleBuf2CR = function(json)
+M.handleBuf2CR = function(files)
     local input = vim.api.nvim_get_current_line()
     local option = getTypeChoice(input)
     local buf = vim.api.nvim_buf_get_lines(vim.api.nvim_get_current_buf(), 0, -1, false)
+    local json = dt.getMetadataByFileName(files)
     if option == "FileOption" then
         handleFileOptionInput(json, input)
     elseif option == "MdHeader" then
