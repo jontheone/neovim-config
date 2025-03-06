@@ -3,7 +3,6 @@ local TEMPLATES = require("templates")
 local FILE = require("managefile")
 local META = require("metadata")
 local CMD = require("cmdfunc")
-local TOPICMOVE = require("topicmove")
 local NOTE = require("notefunc")
 
 -- Configurando as funções como comandos do vim
@@ -37,7 +36,6 @@ vim.keymap.set('n', '<Leader>mg', function() META.searchMetadataVerbose() end, {
 vim.keymap.set('n', '<Leader>mn', function() META.searchMetadataVerbose({greedy=false}) end, { desc="verbose nongreedy metadata search"})
 vim.keymap.set('n', '<Leader>ms', ':Meta<CR>', { desc="Metadata search"})
 vim.keymap.set('n', '<Leader>ml', META.searchLinks, { desc="Search with link keyword"})
-vim.keymap.set('n', '<Leader>fm', TOPICMOVE.topicmove, { desc="move .assuntos dir to a topic"})
 vim.keymap.set('n', '<Leader>mc', META.change.metachange, { desc="change metadata fields" })
 vim.keymap.set('n', '<space>n', ":Note<CR>", {desc="New note"})
 vim.keymap.set('n', '<Leader>e', function() require("metadata.index").linksIndex() end, {desc="Wiki Index"})
