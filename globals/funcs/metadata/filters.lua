@@ -49,7 +49,9 @@ M.greedyFilter = function(args)
     local filteringStructure = M.getFilteringStructure(args)
     for _, value in pairs(filteringStructure) do
         for _, paths in pairs(value) do
-            vim.list_extend(files, paths)
+            for i=1, #paths do
+                table.insert(files, paths[i])
+            end
         end
     end
     local files = require("metadata.datacollect").remove_duplicate(files)

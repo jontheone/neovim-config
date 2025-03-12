@@ -84,7 +84,6 @@ M.SearchMetadata = function(args)
                 end
             end
         end
-        print(vim.inspect(files))
         params.json = M.data.getMetadataByFileName(files)
         if (not args.greedy) and (args.grep) then
             M.pickers.createGrepPicker({}, M.filters.greedyFilter(params))

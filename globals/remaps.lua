@@ -24,4 +24,3 @@ vim.keymap.set('v', '<Leader>h', '^', { noremap = true })
 vim.keymap.set('n', '<Leader>i', '=%', { noremap = true })
 vim.keymap.set('v', '<C-c>', '"+y', { noremap = true, silent = true })
 vim.keymap.set('t', '<esc><esc>', "<c-\\><c-n>", {})
--- TODO verificar se o plugin todo está funcionando

@@ -33,7 +33,7 @@ M.remove_duplicate = function(arr)
 end
 
 M.getLabelsList = function()
-    local output = io.popen([[rg --only-matching --hidden '^#\+.+' /mnt/d/wikis/wiki]]) or {}
+    local output = io.popen([[rg --only-matching --hidden '^#\+.+' /mnt/d/Documents/wikis/wiki]]) or {}
     local entries = output:read("*a")
     output:close()
     local labels = {}
@@ -162,10 +162,12 @@ local parseFileData = function(filename)
                 pair = pair:match("^%s*(.-)%s*$")
                 local values = {}
                 for item in pair:gmatch("[^,]+") do
+                    item = string.gsub(item, "%\r", "")
                     table.insert(values, item)
                 end
                 metadata[key] = values
             else
+                pair = string.gsub(pair, "%\r", "")
                 metadata[key] = pair
             end
         end
@@ -193,7 +195,7 @@ M.dataOf = function(filepath, tag)
     for item in file:lines() do
         index = index + 1
         if item:match("^#%+"..tag..":(.*)") then
-            data = item:match("^#%+"..tag..":(.*)")
+            data = string.gsub(item:match("^#%+"..tag..":(.*)"), "%\r", "")
             break
         end
     end

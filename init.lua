@@ -1,4 +1,4 @@
-package.path = ";/home/jonhson/.config/nvim/lua/?/.lua;/home/jonhson/.config/nvim/lua/plugins/?.lua;/home/jonhson/.config/nvim/globals/?.lua;/home/jonhson/.config/nvim/globals/funcs/?.lua;/home/jonhson/.config/nvim/globals/funcs/?/init.lua"
+package.path = ";/home/jonis/.config/nvim/lua/?/.lua;/home/jonis/.config/nvim/lua/plugins/?.lua;/home/jonis/.config/nvim/globals/?.lua;/home/jonis/.config/nvim/globals/funcs/?.lua;/home/jonis/.config/nvim/globals/funcs/?/init.lua"
 require("globals")
 require("remaps")
 require("autocmds")

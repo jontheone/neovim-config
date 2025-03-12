@@ -32,7 +32,7 @@ vim.keymap.set('n', '<Leader>fn', function() FILE.newfile() end, { desc = "novo 
 vim.keymap.set('n', '<Leader>fd', ':DelFile<CR>', { desc="deleta o arquivo atual"})
 vim.keymap.set('n', '<Leader>fr', ':ChangeFile<CR>', { desc="Muda o nome do arquivo atual"})
 vim.keymap.set({'n', 't'}, '<space>tt', CMD.floaterminal , {})
-vim.keymap.set('n', '<Leader>mg', function() META.searchMetadataVerbose() end, { desc="verbose greedy metadata search"})
+vim.keymap.set('n', '<Leader>mg', function() META.searchMetadataVerbose({greedy=true}) end, { desc="verbose greedy metadata search"})
 vim.keymap.set('n', '<Leader>mn', function() META.searchMetadataVerbose({greedy=false}) end, { desc="verbose nongreedy metadata search"})
 vim.keymap.set('n', '<Leader>ms', ':Meta<CR>', { desc="Metadata search"})
 vim.keymap.set('n', '<Leader>ml', META.searchLinks, { desc="Search with link keyword"})
