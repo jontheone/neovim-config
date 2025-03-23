@@ -42,7 +42,7 @@ M.floaterminal = function()
     if not vim.api.nvim_win_is_valid(state.floating.win) then
         state.floating = M.newwin{ buf = state.floating.buf}
         if vim.bo[state.floating.buf].buftype ~= 'terminal' then
-            vim.fn.termopen(vim.o.shell)
+            vim.fn.termopen("powershell")
         end
     else
         vim.api.nvim_win_close(state.floating.win, true)

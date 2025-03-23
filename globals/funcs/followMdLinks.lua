@@ -48,7 +48,7 @@ M.makePath = function(path)
     if path:sub(1, 2) == "~/" then
         return vim.g.wiki_root .. path:sub(2)
     elseif path:sub(1,2) == "./" then
-        return vim.fn.expand("%:p:h") .. path
+        return vim.fn.expand("%:p:h") .. string.sub(path, 2)
     elseif path:sub(1, 1) == "/" then
         return path
     else

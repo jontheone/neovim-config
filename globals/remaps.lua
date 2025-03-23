@@ -1,17 +1,17 @@
 -- leader key remap 
 vim.g.mapleader = "ç"
-vim.g.maplocalleader = "ç"
+vim.g.maplocalleader = ","
 -- commands remaps
 vim.keymap.set('n', '<C-h>', '<C-w>h')
 vim.keymap.set('n', '<C-j>', '<C-w>j')
 vim.keymap.set('n', '<C-k>', '<C-w>k')
 vim.keymap.set('n', '<C-l>', '<C-w>l')
 vim.keymap.set('n', '<C-g>', '<C-w>w', {noremap = true})
+vim.keymap.set('i', '<C-H>', '<C-w>', {noremap = true})
 vim.keymap.set('n', '<S-A-e>', ':tabe<CR>', { noremap = true })
 vim.keymap.set('n', '<S-A-b>', ':enew<CR>', { noremap = true })
 vim.keymap.set('n', '<S-k>', ':bn<CR>', { noremap = true })
 vim.keymap.set('n', '<S-j>', ':bp<CR>', { noremap = true })
-vim.keymap.set('n', '<S-d>', ':bd!<CR>', { noremap = true })
 vim.keymap.set('n', '<S-h>', ':split<CR>', { noremap = true })
 vim.keymap.set('n', '<S-l>', ':vsplit<CR>', { noremap = true })
 vim.keymap.set('n', 'ww', ':w<CR>', { noremap = true })

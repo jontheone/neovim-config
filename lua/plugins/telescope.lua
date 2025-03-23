@@ -1,13 +1,18 @@
 return {
     "nvim-telescope/telescope.nvim",
-    dependencies = { 'nvim-lua/plenary.nvim', 'BurntSushi/ripgrep'},
-    config = function(_, opts)
+    dependencies = {'nvim-lua/plenary.nvim'},
+    config = function()
         local builtin = require("telescope.builtin")
-        require("telescope").setup(opts)
-        vim.keymap.set("n", "<Leader>ff", function() builtin.find_files({hidden=true}) end, { desc = "find files in curr dir" } )
-        vim.keymap.set("n", "<Leader>fb", builtin.current_buffer_fuzzy_find, { desc = "fuzzy find buffer" })
-        vim.keymap.set("n", "<Leader>fc", function() builtin.live_grep({additional_args=function() return {"--hidden"} end}) end, { desc = "live grep in dir" })
-        vim.keymap.set("n", "<Leader>fg", function() builtin.buffers() end, {desc="search for list of buffers"})
-        vim.keymap.set("n", "<Leader>fw", function() builtin.find_files({ cwd = vim.g.wiki_root, hidden=true}) end, { desc = "search D:/wikis/wiki" })
+        require("telescope").setup({
+            defaults = {
+                mappings = {
+                    i = {
+                        ["<C-j>"] = "move_selection_next",
+                        ["<C-k>"] = "move_selection_previous"
+                    }
+                }
+            }
+        })
+        --require("telescope").load_extension("fzf")
     end
 }
