@@ -7,7 +7,7 @@ M.Push = function(opts)
     local topic_dir = ".assuntos"
     local receiver = vim.fs.joinpath(vim.g.wiki_root, link)
     local sender = vim.fs.joinpath(vim.g.wiki_root, topic_dir)
-    local paths = dt.getFilesByLabelData("links", link, sender, true)
+    local paths = dt.getFilesByLabelData("links", {link}, sender)
     if not paths[1] then
         print("Nenhum arquivo com esse link encontrado")
         return
@@ -28,7 +28,7 @@ M.Push = function(opts)
             if dt.dataOf(path, "type")[1] == "" then
                 local new_path = string.gsub(path, topic_dir, link)
                 os.rename(path, new_path)
-            else                
+            else
                 local new_path = string.gsub(path, topic_dir, ".notas")
                 os.rename(path, new_path)
             end

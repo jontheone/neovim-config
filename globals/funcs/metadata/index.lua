@@ -1,14 +1,6 @@
 local dt = require("metadata.datacollect")
-local pickers = require("telescope.pickers")
-local finders = require("telescope.finders")
-local builtin = require("telescope.builtin")
-local actions = require("telescope.actions")
-local action_state = require("telescope.actions.state")
-local conf = require("telescope.config").values
 
-local ARGS
 local WINDOW_SIZE
-local PATH = vim.g.wiki_root
 local WIN_OPTS = {
     cursorline = true,
     scrolloff = math.floor(vim.o.lines / 2),
@@ -23,24 +15,6 @@ local STATE = {
         buf = -1
     }
 }
-
-local create_input_buf = function(links)
-    local insertbuf = {}
-    local letter
-    for _, link in ipairs(links) do
-        if link == "" then
-            link = "NO_LINK"
-            local blank = string.rep(" ", ((WINDOW_SIZE-11)/2))
-            table.insert(insertbuf, string.format("%s[%s]%s", blank, "NO_LINK", blank))
-        elseif letter ~= string.sub(link, 1, 1) then
-            letter = string.sub(link, 1, 1)
-            local blank = string.rep(" ", ((WINDOW_SIZE-5)/2))
-            table.insert(insertbuf, string.format("%s[%s]%s", blank, letter, blank))
-        end
-        table.insert(insertbuf, link)
-    end
-    return insertbuf
-end
 
 local add_highlightBuf1 = function(buf)
     vim.api.nvim_set_hl(0, 'BracketContentHl', { fg = '#db873d'})
@@ -92,7 +66,6 @@ end
 
 local promptWin = function()
     local winstart = vim.o.columns - (WINDOW_SIZE-1)
-    local winend = winstart + WINDOW_SIZE
     local buf = vim.api.nvim_create_buf(false, true)
     local height = 1
     local width = 15
@@ -113,14 +86,10 @@ local promptWin = function()
     return win, buf
 end
 
-local handleEsc = function(win, buf)
-    vim.api.nvim_win_close(win, true)
-end
-
 local handleCR = function(win, buf)
     vim.api.nvim_win_set_cursor(STATE.open.win, {2, 0})
     vim.api.nvim_set_current_win(STATE.open.win)
-    handleEsc(win, buf)
+    vim.api.nvim_win_close(win, true)
     vim.api.nvim_input("<Esc>")
 end
 
@@ -187,7 +156,7 @@ end
 
 local collapseMdHeaders = function(path, pos, insertbuf, indent)
     local file = io.open(path, "r") or {}
-    local titleIndent = indent
+    local titleIndent = indent..string.rep(" ", 3)
     local num = 0
     local roman = 0
     local alphabet = 0
@@ -219,80 +188,6 @@ local collapseMdHeaders = function(path, pos, insertbuf, indent)
     return insertbuf
 end
 
-local unpackPackage = function(pack, insertbuf, args)
-    for tag, tagpaths in pairs(pack) do
-        local tag_indent = string.rep(" ", 2)
-        local file_indent = string.rep(" ", 5)
-        if tagpaths[1] then
-            table.insert(insertbuf, string.format("%s[%s]", tag_indent, tag))
-            for i=1, #tagpaths do
-                local path = tagpaths[i]
-                local name = string.match(path, "([^/\\]+%.md)$")
-                table.insert(insertbuf, string.format("%s%s", file_indent, " "..name))
-            end
-        end
-    end
-    return insertbuf
-end
-
-local nofilterPackage = function(files, insertbuf)
-    for _, item in ipairs(files) do
-        local indent = string.rep(" ", 2)
-        local name = string.match(item, "([^/\\]+%.md)$")
-        local line = string.format("%s%s", indent, " "..name)
-        table.insert(insertbuf, line)
-    end
-    return insertbuf
-end
-
-local createPackage = function(files, tags)
-    local pack = {}
-    for _, tag in ipairs(tags) do
-        local list = {}
-        if tag == "[no tag]" then
-            tag = ""
-        end
-        for key, value in ipairs(files) do
-            local metatag = dt.getMetadataByFileName(value).tags
-            if type(metatag) == "table" then
-                for i=1, #metatag do
-                    if metatag[i] == tag then
-                        table.insert(list, value)
-                    end
-                end
-            else
-                if metatag == tag then
-                    table.insert(list, value)
-                end
-            end
-        end
-        if tag == "" then
-            pack["no tag"] = list
-        else
-            pack[tag] = list
-        end
-    end
-    return pack
-end
-
-local separateByType = function(files, filter)
-    local paths = {}
-    for _, value in ipairs(files) do
-        local metadata = dt.getMetadataByFileName(value)
-        if not metadata.type then
-            if filter == "" then
-                table.insert(paths, value)
-            end
-        else
-            if metadata.type == filter then
-                table.insert(paths, value)
-            end
-        end
-    end
-    table.sort(paths)
-    return paths
-end
-
 local handleCursorMovedEvent = function()
     local bufnr = vim.api.nvim_get_current_buf() -- Get current buffer
     local cursor_line = vim.api.nvim_win_get_cursor(0)[1] -- Get cursor line
@@ -307,7 +202,7 @@ local handleTextChangedEvent = function(win, buf)
         if line:match("%s*%["..char.."%]%s*") then
             vim.api.nvim_win_set_cursor(STATE.open.win, {(i+1), 0})
             vim.api.nvim_set_current_win(STATE.open.win)
-            handleEsc(win, buf)
+            vim.api.nvim_win_close(win, true)
             vim.api.nvim_input("<Esc>")
             return
         end
@@ -315,89 +210,15 @@ local handleTextChangedEvent = function(win, buf)
     print("No matches")
     vim.api.nvim_win_set_cursor(STATE.open.win, {1, 0})
     vim.api.nvim_set_current_win(STATE.open.win)
-    handleEsc(win, buf)
+    vim.api.nvim_win_close(win, true)
     vim.api.nvim_input("<Esc>")
-end
-
-local getTypeChoice = function(input)
-    if input:match("") then
-        return "FileOption"
-    elseif input:match("%[") then
-        return "TagHeader"
-    elseif input:match("~/") then
-        return "LinkHeader"
-    elseif input:match("[^%[]+%w%.") then
-        return "MdHeader"
-    end
-    return input
-end
-
-local handleFileOptionInput = function(json, input)
-    for key, _ in pairs(json) do
-        if key:match(input:match("%s+%s(.+)")) then
-            local filebuffer = vim.fn.bufadd(key) 
-            vim.fn.bufload(filebuffer)
-            vim.bo[filebuffer].buflisted = true
-            local fwin = getBiggestWin()
-            vim.api.nvim_win_set_buf(fwin, filebuffer)
-        end
-    end
-end
-
-local handleMdHeaderInput= function(json, input, buf)
-    local pos = vim.api.nvim_win_get_cursor(0)[1]
-    local filename
-    local i = tonumber(input:match("%((%d+)%)"))
-    while true do
-        pos = pos-1
-        local line = buf[pos]
-        if line:match("") then
-            filename = line:match("%s(.+)")
-            break
-        end
-    end
-    if filename then
-        for key, _ in pairs(json) do
-            if key:match(filename) then
-                local filebuffer = vim.fn.bufadd(key) 
-                vim.fn.bufload(filebuffer)
-                vim.bo[filebuffer].buflisted = true
-                local fwin = getBiggestWin()
-                vim.api.nvim_win_set_buf(fwin, filebuffer)
-                vim.api.nvim_win_set_cursor(fwin, {i, 0})
-                vim.api.nvim_set_current_win(fwin)
-            end
-        end
-    end
 end
 
 local alphabeticalSearch = function()
     local win, buf = promptWin()
     vim.keymap.set({"n", "i"}, "<CR>", function() handleCR(win, buf) end, {buffer=buf}) 
-    vim.keymap.set("n", "<esc>", function() handleEsc(win, buf) end, {buffer=buf})
+    vim.keymap.set("n", "<esc>", function() vim.api.nvim_win_close(win, true) end, {buffer=buf})
     vim.api.nvim_create_autocmd("TextChangedI", {buffer = buf, callback = function() handleTextChangedEvent(win, buf) end})
-end
-
-local getTagOptions = function(json) 
-    local tags = {}
-    for path, value in pairs(json) do
-        local tag = value["tags"]
-        if type(tag) == "table" then
-            if tag[1] then
-                for i=1, #tag do
-                    table.insert(tags, tag[i])
-                end
-            end
-        else
-            table.insert(tags, tag)
-        end
-    end
-    tags = dt.remove_duplicate(tags)
-    table.sort(tags)
-    if tags[1] == "" then
-        tags[1] = "[no tag]"
-    end
-    return tags
 end
 
 local resizeLeft = function()
@@ -430,98 +251,96 @@ local resizeDefault = function()
     end
 end
 
-local tables_are_equal = function(tbl1, tbl2)
-    if type(tbl1) ~= "table" or type(tbl2) ~= "table" then
-        return false -- Both must be tables
-    end
-
-    for k, v in pairs(tbl1) do
-        if tbl2[k] ~= v then
-            return false -- Mismatched key or value
-        end
-    end
-
-    for k, v in pairs(tbl2) do
-        if tbl1[k] ~= v then
-            return false -- Check the reverse direction
-        end
-    end
-
-    return true
-end
-
-local handlebufferEsc = function()
-    vim.api.nvim_win_hide(STATE.open.win)
-end
-
-local handleExpandHeaderFile = function(path, insertbuf, line)  
-    local file_indent = line:match("^(%s+)[^.-]")
-    local cursorline = vim.api.nvim_win_get_cursor(STATE.open.win)[1]
-    local check = string.match(insertbuf[cursorline+1], "^%s*(.-)%s*$")
-    if check:match("[%[~/]") then
-        insertbuf = collapseMdHeaders(path, (cursorline+1), insertbuf, file_indent..string.rep(" ", 3))
-        vim.bo[STATE.open.buf].modifiable = true
-        vim.api.nvim_buf_set_lines(STATE.open.buf, 0, #insertbuf, false, insertbuf)
-        vim.bo[STATE.open.buf].modifiable = false
-        add_highlightBuf2(STATE.open.buf)
-    end
-end
-
-local handleExpandHeaderTitle = function(files , insertbuf)
-    local pos_start = vim.api.nvim_win_get_cursor(STATE.open.win)[1]
-    local pos_end = -1
-    for i=pos_start+1, #insertbuf do
-        if insertbuf[i]:match("~/") then
-            pos_end = i
-            break
-        end
-    end
-    local fileLines = vim.api.nvim_buf_get_lines(STATE.open.buf, pos_start, pos_end, false)
-    for i, item in ipairs(fileLines) do
-        local file_indent = item:match("^(%s+)[^.-]")
-        local filename = item:match("%s+%s(.+)")
-        local path
-        for i=1, #files do
-            if string.match(files[i], "([^/\\]+%.md)$") == filename then
-                path = files[i]
-                break
+local collapse_all_files = function(insertbuf, files, mdtype)
+    local pos_start = vim.api.nvim_win_get_cursor(STATE.open.win)[1] + 1
+    local i = pos_start
+    while insertbuf[i] and (type(insertbuf[i]:match("[/%[]")) ~= "string") do
+        local line = insertbuf[i]
+        local indent = line:match("(%s+).+") or ""
+        local line_content = line:match("%s*(.*)")
+        local next_line = insertbuf[i+1] or ""
+        local check = string.match(next_line, "^%s*(.-)%s*$")
+        if check:match("[%[/]") then
+            for j=1, #files do
+                local file = string.match(files[j], "([^/\\]+)%.md$")
+                if file == line_content:sub(5) then
+                    insertbuf = collapseMdHeaders(files[j], (i+1), insertbuf, indent)
+                    break
+                end
             end
         end
-        local pos = -1
-        for i=1, #insertbuf do
-            if string.match(insertbuf[i], "%s+%s(.+)") == filename then
-                pos = i
-            end
-        end
-        if filename then
-            local check = string.match(fileLines[i+1] or "", "^%s*(.-)%s*$")
-            if check:match("[%[~/]") then
-                insertbuf = collapseMdHeaders(path, pos, insertbuf, file_indent..string.rep(" ", 3))
-            end
-        end
+        i = i + 1
     end
-    vim.bo[STATE.open.buf].modifiable = true
-    vim.api.nvim_buf_set_lines(STATE.open.buf, 0, #insertbuf, false, insertbuf)
-    vim.bo[STATE.open.buf].modifiable = false
-    add_highlightBuf2(STATE.open.buf)
+    return insertbuf
+end
+
+local collapse_all_tags = function(files, insertbuf, mdtype)
+    local i = vim.api.nvim_win_get_cursor(STATE.open.win)[1] + 1
+    while insertbuf[i] and (type(insertbuf[i]:match("[/]")) ~= "string") do
+        local line = insertbuf[i]
+        local indent = line:match("(%s+).+") or ""
+        local line_content = line:match("%s*(.*)")
+        local next_line = insertbuf[i+1] or ""
+        local check = string.match(next_line, "^%s*(.-)%s*$")
+        if line_content:sub(1, 1) == "[" then
+            if type(check:match("")) ~= "string" then
+                indent = indent..string.rep(" ", 2)
+                local data = line_content:gsub("[%[%]]", "")
+                for j=1, #files do
+                    if dt.dataExists(files[j], "tags", data) and dt.dataExists(files[j], "type", mdtype) then
+                        table.insert(insertbuf, (i+1), string.format("%s%s", indent.." ", string.match(files[j], "([^/\\]+)%.md$")))
+                    end
+                end
+            end
+        end
+        i = i + 1
+    end
+    return insertbuf
 end
 
 local expandHeader = function(files)
     local line = vim.api.nvim_get_current_line()
     local insertbuf = vim.api.nvim_buf_get_lines(vim.api.nvim_get_current_buf(), 0, -1, false)
-    local filename = line:match("%s+%s(.+)")
-    local path
-    for i=1, #files do
-        if string.match(files[i], "([^/\\]+%.md)$") == filename then
-            path = files[i]
+    local indent = line:match("(%s+).+") or ""
+    local line_content = line:match("%s*(.*)")
+    local pos = vim.api.nvim_win_get_cursor(0)[1]
+    local mdtype
+    for i=pos, 1, -1 do
+        if insertbuf[i]:match("~/") then
+            mdtype = insertbuf[i]:match("^~/.+:(.+)$") or ""
             break
         end
     end
-    if line:match("") then
-        handleExpandHeaderFile(path, insertbuf, line)
-    elseif line:match("~/") then
-        handleExpandHeaderTitle(files, insertbuf)
-    end 
+    if line_content:sub(1, 2) == "~/" then
+        insertbuf = collapse_all_tags(files, insertbuf, mdtype)
+    elseif line_content:sub(1, 1) == "[" then -- expand filepaths
+        local next_line = insertbuf[pos+1] or "" -- get the next line to check
+        local check = string.match(next_line, "^%s*(.-)%s*$")
+        if type(check:match("")) ~= "string" then --expand filepaths only if theyre not already expanded
+            indent = indent..string.rep(" ", 2)
+            local data = line_content:gsub("[%[%]]", "")
+            for i=1, #files do
+                if dt.dataExists(files[i], "tags", data) and dt.dataExists(files[i], "type", mdtype) then
+                    table.insert(insertbuf, (pos+1), string.format("%s%s", indent.." ", string.match(files[i], "([^/\\]+)%.md$")))
+                end
+            end
+        else -- in case theyre are expanded, then expand the md headers under the files
+            insertbuf = collapse_all_files(insertbuf, files, mdtype)
+        end
+    elseif line_content:sub(1, 3) == "" then
+        local next_line = insertbuf[pos+1] or "[" -- get the next line to check
+        local check = string.match(next_line, "^%s*(.-)%s*$")
+        if check:match("[%[~/]") then
+            for i=1, #files do
+                local file = string.match(files[i], "([^/\\]+)%.md$")
+                if file == line_content:sub(5) then
+                    insertbuf = collapseMdHeaders(files[i], (pos+1), insertbuf, indent)
+                    break
+                end
+            end
+        end
+    end
+    return insertbuf
 end
 
 local resizeHeight = function(int)
@@ -533,140 +352,92 @@ end
 
 local M = {}
 
-M.tagsInput = function(params)
-    local opts = {}
-    local options = getTagOptions(params.json)  
-    pickers.new(opts, {
-        prompt_title = "Select the metatag to search",
-        finder = finders.new_table{
-            results = options
-        },
-        sorter = conf.generic_sorter(opts),
-        attach_mappings = function(prompt_bufnr)
-            actions.select_default:replace(function()
-                local picker = action_state.get_current_picker(prompt_bufnr)
-                local selected_entries = picker:get_multi_selection()
-                local entry = action_state.get_selected_entry()
-                local input = {}
-                if selected_entries[1] then
-                    for _, value in ipairs(selected_entries) do
-                        table.insert(input, value[1])
-                    end
-                elseif entry[1] then
-                    table.insert(input, entry[1])
-                end
-                actions.close(prompt_bufnr)
-                params.tags = input
-                local insertbuf = M.buildBuf2(params)
-                vim.api.nvim_buf_set_lines(STATE.open.buf, 0, #insertbuf, false, insertbuf)
-                vim.bo[STATE.open.buf].modifiable = false
-                add_highlightBuf2(STATE.open.buf)
-            end)
-            return true
-        end,
-        layout_config = {
-            width = 0.4,
-            height = 0.6
-        }
-    }):find()
-end
-
 M.buildBuf2 = function(params)
     params = params or {}
-    local args = params.args
-    local tags = params.tags
     local link = params.link
     local files = params.files
-    local packages = {}
-    if not tags then -- função sem filtro de tags
-        local insertbuf = {}
-        table.insert(insertbuf, string.format("~/%s", link))
-        insertbuf = nofilterPackage(separateByType(files, ""), insertbuf)
-        table.insert(insertbuf, string.format("~/%s", link .. ":notes"))
-        insertbuf = nofilterPackage(separateByType(files, "note"), insertbuf)
-        return insertbuf
-    else -- função com filtro de tags
-        local insertbuf = {}
-        packages.files = createPackage(separateByType(files, ""), tags)
-        packages.notes = createPackage(separateByType(files, "note"), tags)
-        table.insert(insertbuf, string.format("~/%s", link))
-        insertbuf = unpackPackage(packages.files, insertbuf, args)
-        table.insert(insertbuf, string.format("~/%s", link..":notes"))
-        insertbuf = unpackPackage(packages.notes, insertbuf, args)
-        return insertbuf
+    local indent = string.rep(" ", 2)
+    local insertbuf = {}
+    local tags = dt.getLabelDataList("tags", files)
+    table.insert(insertbuf, string.format("~/%s", link))
+    for _, item in ipairs(tags) do
+        local line = string.format("%s[%s]", indent, item)
+        table.insert(insertbuf, line)
     end
+    table.insert(insertbuf, string.format("~/%s", link .. ":notes"))
+    for _, item in ipairs(tags) do
+        local line = string.format("%s[%s]", indent, item)
+        table.insert(insertbuf, line)
+    end
+    return insertbuf
 end
 
 M.fileIndex = function(params)
     params = params or {}
-    local args = params.args
     local link = params.link
     local buf = vim.api.nvim_create_buf(false, true)
-    local files = dt.getFilesByLabelData("links", link, PATH, true)
+    local files = dt.getFilesByLabelData("links", link)
     vim.api.nvim_win_set_buf(STATE.open.win, buf)
     STATE.open.buf = buf
     vim.wo.signcolumn = WIN_OPTS.signcolumn
     vim.fn.sign_define("CursorSign", { text = ">"})
-    if ARGS.filter then
-        M.tagsInput({args=args, link=link, json=dt.getMetadataByFileName(files), files=files})
-    else
-        local insertbuf = M.buildBuf2({args=args, link=link, files=files})
-        vim.api.nvim_buf_set_lines(STATE.open.buf, 0, #insertbuf, false, insertbuf)
-        vim.bo[STATE.open.buf].modifiable = false
-        add_highlightBuf2(STATE.open.buf)
-    end
+    local insertbuf = M.buildBuf2({link=link, files=files})
+    vim.api.nvim_buf_set_lines(STATE.open.buf, 0, #insertbuf, false, insertbuf)
+    vim.bo[STATE.open.buf].modifiable = false
+    add_highlightBuf2(STATE.open.buf)
     resizeHeight(math.floor(vim.o.lines*0.76))
 
     vim.keymap.set("n", "<CR>", function() M.handleBuf2CR(files) end, {buffer=buf})
-    vim.keymap.set("n", "h", function() M.handleBuf2BS(args) end, {buffer=buf})
-    vim.keymap.set("n", "l", function() expandHeader(files) end, {buffer=buf})
+    vim.keymap.set("n", "h", function() M.handleBuf2BS() end, {buffer=buf})
+    vim.keymap.set("n", "l", function()
+        insertbuf = expandHeader(files)
+        vim.bo[STATE.open.buf].modifiable = true
+        vim.api.nvim_buf_set_lines(STATE.open.buf, 0, #insertbuf, false, insertbuf)
+        vim.bo[STATE.open.buf].modifiable = false
+        add_highlightBuf2(STATE.open.buf)
+    end, {buffer=buf})
     vim.keymap.set("n", "<C-j>", "zH", {buffer=buf})
     vim.keymap.set("n", "<C-k>", "zL", {buffer=buf})
     vim.keymap.set("n", "<C-h>", function() resizeLeft() end, {buffer=buf})
     vim.keymap.set("n", "<C-l>", function() resizeRight() end, {buffer=buf})
-    vim.keymap.set("n", "q", handlebufferEsc, {buffer=buf})
+    vim.keymap.set("n", "q", function() vim.api.nvim_win_hide(STATE.open.win) end, {buffer=buf})
     vim.api.nvim_create_autocmd("CursorMoved", {buffer = buf, callback = handleCursorMovedEvent})
 end
 
-M.buildBuf1 = function(args)
+M.buildBuf1 = function()
     resizeDefault()
     -- buffer config
     local buf = vim.api.nvim_create_buf(false, true)
-    local links = dt.getLabelDataList("links", PATH)
-    local insertbuf = create_input_buf(links)
+    local links = dt.getLabelDataList("links")
+    local insertbuf = {}
+    local letter
+    for _, link in ipairs(links) do
+        if link == "" then
+            link = "NO_LINK"
+            local blank = string.rep(" ", ((WINDOW_SIZE-11)/2))
+            table.insert(insertbuf, string.format("%s[%s]%s", blank, "NO_LINK", blank))
+        elseif letter ~= string.sub(link, 1, 1) then
+            letter = string.sub(link, 1, 1)
+            local blank = string.rep(" ", ((WINDOW_SIZE-5)/2))
+            table.insert(insertbuf, string.format("%s[%s]%s", blank, letter, blank))
+        end
+        table.insert(insertbuf, link)
+    end
     vim.api.nvim_buf_set_lines(buf, 0, (#insertbuf-1), false, insertbuf)
     add_highlightBuf1(buf)
     vim.bo[buf].modifiable = false
 
-    vim.keymap.set("n", "<CR>", function()    
-        local line = vim.api.nvim_get_current_line()
-        if not line:match("%[") and not line:match("%s") then
-            M.fileIndex({args=args, link=line})
-        end
-    end, {buffer=buf})
+    vim.keymap.set("n", "l", function() local line = vim.api.nvim_get_current_line(); if not line:match("%[") and not line:match("%s") then M.fileIndex({link=line}) end end, {buffer=buf})
 
     vim.keymap.set("n", "a", alphabeticalSearch, {buffer=buf})
-    vim.keymap.set("n", "q", handlebufferEsc, {buffer=buf})
+    vim.keymap.set("n", "q", function() vim.api.nvim_win_hide(STATE.open.win) end, {buffer=buf})
     vim.api.nvim_create_autocmd("CursorMoved", {buffer = buf, callback = handleCursorMovedEvent})
 
     return buf
 end
 
 
-M.linksIndex = function(args)
-    args = args or {}
-    if ARGS and args then
-        if tables_are_equal(ARGS, args) then
-            args = ARGS
-        else
-            ARGS = args or {}
-            STATE.open.buf = -1
-        end
-    else
-        ARGS = args or {}
-        STATE.open.buf = -1
-    end
-    -- create window or close it if its already open
+M.linksIndex = function()
     if not vim.api.nvim_win_is_valid(STATE.open.win) then
         WINDOW_SIZE = WINDOW_SIZE or 45
         local width = WIN_OPTS.width or WINDOW_SIZE
@@ -684,7 +455,7 @@ M.linksIndex = function(args)
             height = height,
         }
         if not vim.api.nvim_buf_is_valid(STATE.open.buf) then
-            STATE.open.buf = M.buildBuf1(args)
+            STATE.open.buf = M.buildBuf1()
         end
         STATE.open.win = vim.api.nvim_open_win(STATE.open.buf, true, opts)
 
@@ -705,33 +476,50 @@ end
 
 M.handleBuf2CR = function(files)
     local input = vim.api.nvim_get_current_line()
-    local option = getTypeChoice(input)
     local buf = vim.api.nvim_buf_get_lines(vim.api.nvim_get_current_buf(), 0, -1, false)
-    local json = dt.getMetadataByFileName(files)
-    if option == "FileOption" then
-        handleFileOptionInput(json, input)
-    elseif option == "MdHeader" then
-        handleMdHeaderInput(json, input, buf)
+    if input:match("") then
+        for i=1, #files do
+            if files[i]:match(input:match("%s+%s(.+)")) then
+                local filebuffer = vim.fn.bufadd(key) 
+                vim.fn.bufload(filebuffer)
+                vim.bo[filebuffer].buflisted = true
+                local fwin = getBiggestWin()
+                vim.api.nvim_win_set_buf(fwin, filebuffer)
+            end
+        end
+    elseif input:match("[^%[]+%w%.") then
+        local pos = vim.api.nvim_win_get_cursor(0)[1]
+        local filename
+        local i = tonumber(input:match("%((%d+)%)"))
+        while true do
+            pos = pos-1
+            local line = buf[pos]
+            if line:match("") then
+                filename = line:match("%s(.+)")
+                break
+            end
+        end
+        if filename then
+            for j=1, #files do
+                if files[j]:match(filename) then
+                    local filebuffer = vim.fn.bufadd(files[j])
+                    vim.fn.bufload(filebuffer)
+                    vim.bo[filebuffer].buflisted = true
+                    local fwin = getBiggestWin()
+                    vim.api.nvim_win_set_buf(fwin, filebuffer)
+                    vim.api.nvim_win_set_cursor(fwin, {i, 0})
+                    vim.api.nvim_set_current_win(fwin)
+                end
+            end
+        else
+            return
+        end
     end
 end
 
 M.handleBuf2BS = function(args)
     STATE.open.buf = M.buildBuf1(args)
     vim.api.nvim_win_set_buf(STATE.open.win, STATE.open.buf)
-end
-
-M.CliIndex = function(opts)
-    local args = {}
-    for option, config in opts.args:gmatch("(%S+)=(%S+)") do
-        local num = tonumber(config)
-        if num then
-            args[option] = num ~= 0 -- Convert to true/false
-        else
-            args[option] = config -- Keep as string if not a number
-        end
-        --args[option] = config
-    end
-    M.linksIndex(args)
 end
 
 return M

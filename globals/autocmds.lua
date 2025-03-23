@@ -10,7 +10,7 @@ vim.api.nvim_create_autocmd("BufNewFile", {
     pattern = {"*.md", "*.markdown"},
     callback = function()
         local template = {
-            '#+file name:',
+            string.format('#+file name:%s', vim.fn.expand("%:t")),
             '#+links:',
             '#+tags:',
             '#+type:',
