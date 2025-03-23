@@ -4,6 +4,8 @@ vim.api.nvim_create_autocmd("FileType", {
 		vim.opt_local.formatoptions:append("r") -- `<CR>` in insert mode
 		vim.opt_local.formatoptions:append("o") -- `o` in normal mode
 		vim.opt_local.comments = {"b:>"}
+        vim.cmd("highlight CustomHighlight guifg=#3ae06f")
+        vim.fn.matchadd("CustomHighlight", [[^#\+[^:]*:]])
 	end,
 })
 vim.api.nvim_create_autocmd("BufNewFile", {
@@ -20,3 +22,4 @@ vim.api.nvim_create_autocmd("BufNewFile", {
         vim.api.nvim_command("normal! Go")
     end
 })
+

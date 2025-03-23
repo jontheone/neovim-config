@@ -18,7 +18,7 @@ vim.api.nvim_create_user_command('ChangeFile', fs.ChangeNode, { desc="Muda o nom
 vim.api.nvim_create_user_command('Floaterminal', cmd.floaterminal, {})
 vim.api.nvim_create_user_command('Note', nt.main, { desc="New Note"})
 vim.api.nvim_create_user_command('Push', mt.push.Push, { desc="Push files in the topic dir to the link dir", nargs=1})
-vim.api.nvim_create_user_command('Index', mt.index.CliIndex, { desc="Wiki Index", nargs="*"})
+vim.api.nvim_create_user_command('Index', mt.index.linksIndex, { desc="Wiki Index", nargs="*"})
 vim.api.nvim_create_user_command('Mt', mt.pickers.search, { desc="Metadata search", nargs=1})
 vim.api.nvim_create_user_command('Mtc', mt.change.change, { desc="Change metadata in the current buffer", nargs=1})
 vim.api.nvim_create_user_command("Qf", function() vim.cmd([[caddexpr expand("%") . ":" . line(".") . ":" . col(".") . ":" . getline(".")]]) end , { desc="add line to qf list"})
