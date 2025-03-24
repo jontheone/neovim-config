@@ -22,6 +22,8 @@ vim.api.nvim_create_user_command('Index', mt.index.linksIndex, { desc="Wiki Inde
 vim.api.nvim_create_user_command('Mt', mt.pickers.search, { desc="Metadata search", nargs=1})
 vim.api.nvim_create_user_command('Mtc', mt.change.change, { desc="Change metadata in the current buffer", nargs=1})
 vim.api.nvim_create_user_command("Qf", function() vim.cmd([[caddexpr expand("%") . ":" . line(".") . ":" . col(".") . ":" . getline(".")]]) end , { desc="add line to qf list"})
+vim.api.nvim_create_user_command("File", function(opts) vim.cmd([[e ]]..vim.fs.joinpath(vim.g.wiki_root, ".assuntos", opts.args)) end, {desc = "new Md file", nargs=1})
+vim.api.nvim_create_user_command("Qfile", function(opts) vim.cmd([[vsplit | e ]]..vim.fs.joinpath(vim.g.wiki_root, ".assuntos", opts.args)) end, {desc = "new Md file with split", nargs=1})
 
 
 
