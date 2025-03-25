@@ -1,6 +1,6 @@
 local M = {}
 
-local cmd = [[powershell -NoProfile -Command]]
+local cmd = [[powershell -NoProfile -Command ]]
 local search_command = [[rg --hidden --pcre2 -l -g '*.md']]
 
 M.remove_duplicate = function(arr)
@@ -16,7 +16,7 @@ M.remove_duplicate = function(arr)
 end
 
 M.getLabelsList = function()
-    local output = io.popen(cmd..[[ rg --hidden --vimgrep "^#\+.+" ]]..vim.g.wiki_root) or {}
+    local output = io.popen(cmd..[[rg --hidden --vimgrep "^#\+.+" ]]..vim.g.wiki_root) or {}
     local entries = output:read("*a")
     output:close()
     local labels = {}
@@ -37,7 +37,7 @@ M.getLabelDataList = function(label, path)
     if type(path) == "table" then
         path = table.concat(path, " ")
     end
-    local output = io.popen(string.format(cmd..[[ rg --hidden '^#\+%s:(.*)' --no-line-number --no-heading --no-filename -P --stop-on-nonmatch --replace '$1' %s]], label, path)) or {}
+    local output = io.popen(string.format(cmd..[[rg --hidden '^#\+%s:(.*)' --no-line-number --no-heading --no-filename -P --stop-on-nonmatch --replace '$1' %s]], label, path)) or {}
     local datalist = {}
     local seen = {}
     for line in output:lines() do
@@ -224,6 +224,38 @@ M.dataExists = function(filepath, label, value)
         end
     end
     return false
+end
+
+M.linkExists = function(opts)
+    local command = cmd..search_command..genPattern("links", opts.args)..vim.g.wiki_root
+    local output = io.popen(command) or {}
+    local entries = output:read("*a")
+    output:close()
+    if entries == "" then
+        print("Link não existe")
+    else
+        local arr = {}
+        for item in entries:gmatch("\n+") do
+            table.insert(arr, item)
+        end
+        print("link referenciado "..#arr.." vezes")
+    end
+end
+
+M.tagExists = function(opts)
+    local command = cmd..search_command..genPattern("tags", opts.args)..vim.g.wiki_root
+    local output = io.popen(command) or {}
+    local entries = output:read("*a")
+    output:close()
+    if entries == "" then
+        print("tag não existe")
+    else
+        local arr = {}
+        for item in entries:gmatch("\n+") do
+            table.insert(arr, item)
+        end
+        print("tag referenciado "..#arr.." vezes")
+    end
 end
 
 return M
