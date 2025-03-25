@@ -5,6 +5,7 @@ local actions = require("telescope.actions")
 local action_state = require("telescope.actions.state")
 local conf = require("telescope.config").values
 local dt = require("metadata.datacollect")
+local picker_memory
 
 local M = {}
 
@@ -73,15 +74,25 @@ M.createPicker = function(paths)
             return true
         end
     }):find()
+    picker_memory = {picker=M.createPicker, paths=paths}
 end
 
 M.createGrepPicker = function(paths)
-    path = path or vim.g.wiki_root
+    paths = paths or vim.g.wiki_root
     builtin.live_grep({
         prompt_title = "Custom live grep",
         search_dirs = paths,
         layout_strategy = "bottom_pane"
     })
+    picker_memory = {picker=M.createGrepPicker, paths=paths}
+end
+
+M.accessMemory = function()
+    if picker_memory then
+        picker_memory["picker"](picker_memory["paths"])
+    else
+        print("No picker used yet")
+    end
 end
 
 return M

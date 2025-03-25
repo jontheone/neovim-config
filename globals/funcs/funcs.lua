@@ -38,4 +38,5 @@ vim.keymap.set('n', '<Leader>fr', ':ChangeFile<CR>', { desc='Muda o nome do arqu
 vim.keymap.set({'n', 't'}, '<space>tt', cmd.floaterminal , {})
 vim.keymap.set('n', '<space>n', ':Note<CR>', {desc='New note'})
 vim.keymap.set('n', '<Leader>e', function() mt.index.linksIndex() end, {desc='Wiki Index'})
+vim.keymap.set('n', '<Leader>pl', function() mt.pickers.accessMemory() end, {desc='Wiki Index'})
 vim.keymap.set("n", "<Leader>q", function() vim.cmd([[caddexpr expand("%") . ":" . line(".") . ":" . col(".") . ":" . getline(".")]]) end , { desc="add line to qf list"})
