@@ -6,6 +6,9 @@ M.followMdLinks = function()
     end
     local link = vim.fn.expand("<cWORD>")
     local path = link:match("^%[.+%]%((.+)%)$")
+    if not path:match("^%./.+$") then
+        path = vim.fs.joinpath(vim.fn.expand("%:p:h") , path)
+    end
     if not (path:sub(-3) == ".md") then
         print("caminho inválido")
         return
