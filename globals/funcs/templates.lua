@@ -24,6 +24,7 @@ M.template_new_file = function()
         string.format('#+file name:%s', vim.fn.expand("%:t")),
         '#+links:',
         '#+tags:',
+        '#+topic:',
         '#+type:',
         ' '
     }

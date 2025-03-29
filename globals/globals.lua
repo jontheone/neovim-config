@@ -23,8 +23,12 @@ vim.opt.expandtab = true
 vim.opt.softtabstop = 4
 vim.opt.shadafile = "NONE"
 vim.opt.termguicolors = true
+vim.opt.winblend = 0
+vim.opt.wildoptions = 'pum'
+vim.opt.pumblend = 5
 vim.g.initial_dir = vim.fn.getcwd()
 vim.g.wiki_root = "D:/documents/wikis/wiki"
 vim.opt.foldmethod = 'marker'
 vim.opt.foldmarker = '<!-- METADATA -->,<!-- /METADATA -->'
 vim.opt.foldenable = false
+

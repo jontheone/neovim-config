@@ -8,7 +8,8 @@ return {
         config = function()
             require("mason").setup()
             require("mason-lspconfig").setup({
-                ensure_installed = { "pyright", "lua_ls", "csharp_ls", "vimls" }, -- Adicione os servidores que deseja instalar
+                ensure_installed = { "pyright", "lua_ls", "csharp_ls", "vimls", "ts_ls", "cssls", "superhtml" }, -- Adicione os servidores que deseja instalar
+                automatic_installation = true
             })
 
             -- Configuração automática para servidores instalados
@@ -18,11 +19,15 @@ return {
             lspconfig.pyright.setup { capabilities = capabilities }
             lspconfig.csharp_ls.setup { capabilities = capabilities }
             lspconfig.vimls.setup { capabilities = capabilities }
+            lspconfig.ts_ls.setup{ capabilities = capabilities}
+            lspconfig.cssls.setup{ capabilities = capabilities}
+            lspconfig.superhtml.setup{ capabilities = capabilities}
 --            require("mason-lspconfig").setup_handlers({
 --                function(server_name)
 --                    lspconfig[server_name].setup({})
 --                end,
 --            })
+            vim.lsp.set_log_level("debug")
         end,
     }
 }
