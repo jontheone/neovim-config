@@ -11,7 +11,7 @@ vim.api.nvim_create_user_command('Html', tmp.template_html, { desc = "Cria um te
 vim.api.nvim_create_user_command('Date', tmp.template_date, { desc = "Cria um template com a data de hoje" })
 vim.api.nvim_create_user_command('FollowMdLinks', follow.followMdLinks , {})
 vim.api.nvim_create_user_command('Teste', function() end, {})
-vim.api.nvim_create_user_command('Mk', function() fs.newfile() end, {})
+vim.api.nvim_create_user_command('Touch', function(opts) vim.cmd([[e expand('%:p:h')."/]]..opts.args..'"') end, {nargs=1})
 vim.api.nvim_create_user_command('Comment', function() vim.cmd("'<,'>s/^/-- /") end, { desc="Comenta com --"})
 vim.api.nvim_create_user_command('DelFile', fs.DeleteFile, { desc="deleta o arquivo atual" })
 vim.api.nvim_create_user_command('ChangeFile', fs.ChangeNode, { desc="Muda o nome do arquivo atual" })

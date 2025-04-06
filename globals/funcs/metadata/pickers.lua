@@ -59,8 +59,9 @@ M.createPicker = function(paths)
         finder = finders.new_table{
             results = options,
             entry_maker = function(entry)
+                local path = string.gsub(entry.path, vim.g.wiki_root, "")
                 return {
-                    display = entry.name,
+                    display = path,
                     ordinal = entry.name,
                     path = entry.path
                 }

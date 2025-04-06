@@ -47,6 +47,6 @@ return {
                 highlight = 'RenderMarkdownChecked',
                 scope_highlight = nil,
             }
-        }
+        },
     }
 }
