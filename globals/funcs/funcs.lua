@@ -4,6 +4,7 @@ local fs = require("managefile")
 local mt = require("metadata")
 local cmd = require("cmdfunc")
 local nt = require("notefunc")
+require("foldMdHeaders")
 
 -- Configurando as funções como comandos do vim
 vim.api.nvim_create_user_command('Template', tmp.template_new_file, { desc = "template for any file" })

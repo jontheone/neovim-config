@@ -3,7 +3,10 @@ vim.api.nvim_create_autocmd("FileType", {
 	callback = function()
 		vim.opt_local.formatoptions:append("r") -- `<CR>` in insert mode
 		vim.opt_local.formatoptions:append("o") -- `o` in normal mode
-		vim.opt_local.comments = {"b:>"}
+        vim.opt_local.comments = {
+            "b:>",
+            "b:# TODO:"
+        }
         vim.cmd("highlight CustomHighlight guifg=#3ae06f")
         vim.fn.matchadd("CustomHighlight", [[^#+.\+:]])
 	end,

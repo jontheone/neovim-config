@@ -41,6 +41,11 @@ return {
         end
         require('dashboard').setup {
             theme = "doom",
+            hide = {
+                statusline = true,
+                tabline = true,
+                winbar = true
+            },
             config ={
                 header = {
                     [[      ___           ___           ___                                      ___     ]],

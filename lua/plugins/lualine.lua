@@ -17,7 +17,7 @@ return {
                 lualine_c = {'diff'},
                 lualine_x = {'searchcount', 'selectioncount'},
                 lualine_y = { get_file_icon },
-                lualine_z = {'progress', 'location'}
+                lualine_z = {'progress', 'location', }
             }
         }
     end

@@ -29,7 +29,4 @@ vim.opt.pumblend = 5
 vim.opt.fileformat = "dos"
 vim.g.initial_dir = vim.fn.getcwd()
 vim.g.wiki_root = "D:/documents/wikis/wiki"
-vim.opt.foldmethod = 'marker'
-vim.opt.foldmarker = '<!-- METADATA -->,<!-- /METADATA -->'
-vim.opt.foldenable = false
 
