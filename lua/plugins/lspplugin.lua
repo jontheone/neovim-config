@@ -27,7 +27,6 @@ return {
 --                    lspconfig[server_name].setup({})
 --                end,
 --            })
-            vim.lsp.set_log_level("debug")
         end,
     }
 }
