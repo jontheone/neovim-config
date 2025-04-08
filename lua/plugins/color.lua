@@ -57,13 +57,21 @@ return {
         {
             'nyoom-engineering/oxocarbon.nvim',
             config = function()
-                vim.cmd("colorscheme oxocarbon")
+                --vim.cmd("colorscheme oxocarbon")
             end
         },
         {
             'widatama/vim-phoenix',
             config = function()
                 --vim.cmd.colorscheme("phoenix")
+            end
+        },
+        {
+            "projekt0n/github-nvim-theme",
+            priority = 1000,
+            lazy = false,
+            config = function()
+                vim.cmd('colorscheme  github_dark_colorblind')
             end
         }
     }
