@@ -30,6 +30,6 @@ return {
           return true  -- Enable completion for all other buffers
       end
   },
-  opts_extend = { "sources.default" }
+  opts_extend = { "sources.default" },
 }
 

@@ -27,6 +27,6 @@ vim.opt.winblend = 0
 vim.opt.wildoptions = 'pum'
 vim.opt.pumblend = 5
 vim.opt.fileformat = "dos"
+vim.opt.paragraphs = '  '
 vim.g.initial_dir = vim.fn.getcwd()
 vim.g.wiki_root = "D:/documents/wikis/wiki"
-

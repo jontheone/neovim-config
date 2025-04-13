@@ -3,6 +3,5 @@ return {
   lazy = true,
   dependencies = "nvim-tree/nvim-web-devicons",
   cmd = "BufferList",
-  opts = {
-  },
+  opts = {}
 }
