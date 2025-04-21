@@ -12,12 +12,12 @@ return {
         end
         require("lualine").setup{
             sections = {
-                lualine_a = {'mode'},
+                lualine_a = {''},
                 lualine_b = {'filename'},
                 lualine_c = {'diff'},
                 lualine_x = {'searchcount', 'selectioncount'},
-                lualine_y = { get_file_icon },
-                lualine_z = {'progress', 'location', }
+                lualine_y = { get_file_icon, 'location' },
+                lualine_z = { }
             }
         }
     end

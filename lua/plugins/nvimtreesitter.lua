@@ -4,7 +4,7 @@ return {
         --this line is important:
         require 'nvim-treesitter.install'.compilers = { "clang" }
         require 'nvim-treesitter.configs'.setup {
-            ensure_installed = {"c", "markdown", "markdown_inline", "html", "python", "lua", "c_sharp"}
+            ensure_installed = {"c", "markdown", "markdown_inline", "html", "python", "lua", "c_sharp", "go"}
         }
         vim.api.nvim_create_autocmd("BufReadPost", {
             callback = function()

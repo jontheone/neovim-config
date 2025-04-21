@@ -8,7 +8,7 @@ return {
         config = function()
             require("mason").setup()
             require("mason-lspconfig").setup({
-                ensure_installed = { "pyright", "lua_ls", "csharp_ls", "vimls", "ts_ls", "cssls", "superhtml" }, -- Adicione os servidores que deseja instalar
+                ensure_installed = { "pyright", "lua_ls", "csharp_ls", "vimls", "ts_ls", "cssls", "superhtml"}, -- Adicione os servidores que deseja instalar
                 automatic_installation = true
             })
 

@@ -10,7 +10,6 @@ return {
                 javascript = { "prettier", "prettierd" },
                 lua = { "prettier", "prettierd" },
                 python = { "prettier", "prettierd" },
-                c = { "prettier", "prettierd" },
                 markdown = { "prettier", "prettierd" }
             }
         })

@@ -7,7 +7,9 @@ return {
           preset = 'default',
           ["<Tab>"] = {"accept", "fallback"},
           ["<C-j>"] = {function(cmp) cmp.select_next() end},
-          ["<C-k>"] = {function(cmp) cmp.select_prev() end}
+          ["<C-k>"] = {function(cmp) cmp.select_prev() end},
+          ["<C-n>"] = {function(cmp) cmp.snippet_forward() end},
+          ["<C-N>"] = {function(cmp) cmp.snippet_backward() end},
       },
       appearance = {
           use_nvim_cmp_as_default = true,
