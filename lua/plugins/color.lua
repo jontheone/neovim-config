@@ -86,7 +86,7 @@ return {
         priority = 1000,
         lazy = false,
         config = function()
-            vim.cmd("colorscheme minimal-base16")
+            --vim.cmd("colorscheme minimal-base16")
         end
     }
 }
