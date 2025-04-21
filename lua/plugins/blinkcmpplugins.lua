@@ -15,6 +15,11 @@ return {
           use_nvim_cmp_as_default = true,
           nerd_font_variant = 'mono'
       },
+      completion = {
+          menu = {
+              border = "rounded"
+          }
+      },
       enabled = function()
           -- Retrieve the current buffer's 'buftype' and 'filetype'
           local buftype = vim.bo.buftype
@@ -34,4 +39,3 @@ return {
   },
   opts_extend = { "sources.default" },
 }
-
