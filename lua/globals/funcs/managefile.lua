@@ -63,8 +63,7 @@ M.DeleteFile = function()
         local input = vim.api.nvim_buf_get_lines(buf, 0, -1, false)[1]
         if input == "del" then
             vim.api.nvim_win_close(win, true)
-            vim.cmd("w")
-            require("snacks").bufdelete.delete()
+            vim.cmd("bd!")
             vim.fn.delete(path)
         else
             vim.api.nvim_win_close(win, true)
