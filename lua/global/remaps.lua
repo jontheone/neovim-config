@@ -1,0 +1,26 @@
+-- leader key remap 
+vim.g.mapleader = "ç"
+vim.g.maplocalleader = ","
+-- commands remaps
+vim.keymap.set('n', '<C-h>', '<C-w>h')
+vim.keymap.set('n', '<C-j>', '<C-w>j')
+vim.keymap.set('n', '<C-k>', '<C-w>k')
+vim.keymap.set('n', '<C-l>', '<C-w>l')
+vim.keymap.set('n', '<C-ç>', '<C-w>w', {noremap = true})
+vim.keymap.set('t', '<C-g>', '<c-\\><c-n>:NoiceDismiss<CR><C-w>w', {noremap = true})
+vim.keymap.set('i', '<C-H>', '<C-w>', {noremap = true})
+vim.keymap.set('n', '<S-A-e>', ':tabe<CR>', { noremap = true })
+vim.keymap.set('n', '<S-A-b>', ':enew<CR>', { noremap = true })
+vim.keymap.set('n', '<A-k>', ':bn<CR>', { noremap = true })
+vim.keymap.set('n', '<A-j>', ':bp<CR>', { noremap = true })
+vim.keymap.set('n', '<S-h>', ':split<CR>', { noremap = true })
+vim.keymap.set('n', '<S-l>', ':vsplit<CR>', { noremap = true })
+vim.keymap.set('n', '<S-d>', ':bd<CR>', { noremap = true })
+vim.keymap.set('n', '<Leader>l', 'g_', { noremap = true })
+vim.keymap.set('n', '<Leader>h', '^', { noremap = true })
+vim.keymap.set('v', '<Leader>l', 'g_', { noremap = true })
+vim.keymap.set('v', '<Leader>h', '^', { noremap = true })
+vim.keymap.set('n', '<Leader>i', '=%', { noremap = true })
+vim.keymap.set('v', '<C-c>', '"+y', { noremap = true, silent = true })
+vim.keymap.set('t', '<esc><esc>', "<c-\\><c-n>", {})
+vim.keymap.set('n', '<leader>d', ':Explore<CR>', { desc="bring netrw"})
