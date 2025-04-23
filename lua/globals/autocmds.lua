@@ -46,3 +46,11 @@ vim.api.nvim_create_autocmd("BufNewFile", {
     end
 })
 
+vim.api.nvim_create_autocmd("FileType", {
+    pattern = "netrw",
+    callback = function()
+        vim.keymap.set("n", "yy", function()
+            vim.fn.setreg('"', vim.fn.expand("%")..vim.fn.getline("."))
+        end, { buffer = true})
+    end
+})

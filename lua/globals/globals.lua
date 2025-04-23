@@ -29,3 +29,4 @@ vim.opt.pumblend = 5
 vim.opt.fileformat = "dos"
 vim.g.initial_dir = vim.fn.getcwd()
 vim.g.wiki_root = "D:/documents/wikis/wiki"
+vim.g.netrw_altv = 1
