@@ -1,18 +1,18 @@
 vim.api.nvim_create_autocmd("FileType", {
-	pattern = "markdown",
-	callback = function()
-		vim.opt_local.formatoptions:append("r") -- `<CR>` in insert mode
-		vim.opt_local.formatoptions:append("o") -- `o` in normal mode
+    pattern = "markdown",
+    callback = function()
+        vim.opt_local.formatoptions:append("r") -- `<CR>` in insert mode
+        vim.opt_local.formatoptions:append("o") -- `o` in normal mode
         vim.opt_local.comments = {
             "b:>",
             "b:# TODO:"
         }
         vim.cmd("highlight CustomHighlight guifg=#3ae06f")
         vim.fn.matchadd("CustomHighlight", [[^#+.\+:]])
-	end,
+    end,
 })
 vim.api.nvim_create_autocmd("BufNewFile", {
-    pattern = {"*.md", "*.markdown"},
+    pattern = { "*.md", "*.markdown" },
     callback = function()
         local template = {
             '#+links:',
@@ -26,7 +26,7 @@ vim.api.nvim_create_autocmd("BufNewFile", {
     end
 })
 vim.api.nvim_create_autocmd("BufNewFile", {
-    pattern = {"*.html"},
+    pattern = { "*.html" },
     callback = function()
         local template = {
             '<!DOCTYPE html>',
@@ -46,3 +46,11 @@ vim.api.nvim_create_autocmd("BufNewFile", {
     end
 })
 
+vim.api.nvim_create_autocmd("FileType", {
+    pattern = "netrw",
+    callback = function()
+        vim.keymap.set("n", "yy", function()
+            vim.fn.setreg('"', string.gsub(vim.fs.joinpath(vim.fn.expand("%"), vim.fn.getline(".")), [[^/*(.-)/*$]], "%1"))
+        end, { buffer = vim.api.nvim_get_current_buf() })
+    end
+})

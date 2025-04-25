@@ -11,7 +11,7 @@ return {
         set("n", "<leader>s", function()
             local list = hp:list():display()
             local path = vim.fn.expand("%:p")
-            for i=1, #list do
+            for i = 1, #list do
                 if path:match(list[i]) then
                     hp:list():remove_at(i)
                 end
