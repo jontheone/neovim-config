@@ -34,7 +34,6 @@ vim.api.nvim_create_user_command("Extag", mt.data.tagExists, {desc = "new Md fil
 vim.keymap.set('n', '<Leader>tt', ":Template<CR>", {desc="metadata template"})
 vim.keymap.set('n', '<leader>td', ':Date', {silent = true, noremap = true, desc = 'date template'})
 vim.keymap.set('n', '<CR>', follow.followMdLinks, { noremap = true })
-vim.keymap.set('n', '<BS>', ":e #<CR>", {})
 vim.keymap.set('n', '<Leader>fn', function() fs.newfile() end, { desc = 'novo arquivo' })
 vim.keymap.set('n', '<Leader>fd', ':DelFile<CR>', { desc='deleta o arquivo atual'})
 vim.keymap.set('n', '<Leader>fr', ':ChangeFile<CR>', { desc='Muda o nome do arquivo atual'})

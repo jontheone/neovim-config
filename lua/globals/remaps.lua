@@ -1,5 +1,5 @@
 -- leader key remap 
-vim.g.mapleader = "ç"
+vim.g.mapleader = ";"
 vim.g.maplocalleader = ","
 -- commands remaps
 --vim.keymap.set('n', '<C-h>', '<C-w>h')
@@ -7,6 +7,7 @@ vim.g.maplocalleader = ","
 --vim.keymap.set('n', '<C-k>', '<C-w>k')
 --vim.keymap.set('n', '<C-l>', '<C-w>l')
 --vim.keymap.set('n', '<C-ç>', '<C-w>w', {noremap = true})
+vim.keymap.set("n", ",", ";")
 vim.keymap.set('n', '<C-h>', ':vertical resize -10<CR>')
 vim.keymap.set('n', '<C-l>', ':vertical resize +10<CR>')
 vim.keymap.set('n', '<C-j>', ':resize -10<CR>')
