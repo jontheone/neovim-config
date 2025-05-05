@@ -78,7 +78,16 @@ return {
 	"rose-pine/neovim",
 	name = "rose-pine",
 	config = function()
-		--vim.cmd("colorscheme rose-pine")
+        require("rose-pine").setup({
+            palette = {
+                main = {
+                    base = '#000000',
+                    overlay = "#000000",
+                    surface = "#000000"
+                }
+            }
+        })
+		vim.cmd("colorscheme rose-pine-main")
 	end
     },
     {
@@ -86,7 +95,7 @@ return {
         priority = 1000,
         lazy = false,
         config = function()
-            --vim.cmd("colorscheme minimal-base16")
+            --vim.cmd("colorscheme minimal")
         end
     }
 }

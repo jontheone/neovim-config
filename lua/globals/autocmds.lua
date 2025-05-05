@@ -15,7 +15,7 @@ vim.api.nvim_create_autocmd("BufNewFile", {
     pattern = {"*.md", "*.markdown"},
     callback = function()
         local template = {
-            '#+links:curso pis-cofins',
+            '#+links:',
             '#+tags:',
             '#+topic:',
             '#+type:',

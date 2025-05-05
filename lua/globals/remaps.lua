@@ -8,6 +8,8 @@ vim.g.maplocalleader = ","
 --vim.keymap.set('n', '<C-l>', '<C-w>l')
 --vim.keymap.set('n', '<C-ç>', '<C-w>w', {noremap = true})
 vim.keymap.set("n", ",", ";")
+vim.keymap.set("n", "0", "^")
+vim.keymap.set("n", "^", "0")
 vim.keymap.set('n', '<C-h>', ':vertical resize -10<CR>')
 vim.keymap.set('n', '<C-l>', ':vertical resize +10<CR>')
 vim.keymap.set('n', '<C-j>', ':resize -10<CR>')
