@@ -1,0 +1,8 @@
+{
+  "fzf-lua": { "branch": "main", "commit": "6302f7ac9de6e293c3eb6c20c015155e117b598b" },
+  "lazy.nvim": { "branch": "main", "commit": "6c3bda4aca61a13a9c63f1c1d1b16b9d3be90d7a" },
+  "neovim": { "branch": "main", "commit": "491a0c77abc7ecb955c27a974091a5968232995f" },
+  "nvim-autopairs": { "branch": "master", "commit": "4d74e75913832866aa7de35e4202463ddf6efd1b" },
+  "nvim-web-devicons": { "branch": "master", "commit": "2c2b4eafce6cdd0cb165036faa17396eff18f847" },
+  "wilder.nvim": { "branch": "master", "commit": "679f348dc90d80ff9ba0e7c470c40a4d038dcecf" }
+}
