@@ -1,3 +1,8 @@
 vim.keymap.set("n", "<leader>d", ":Explore<CR>")
 vim.keymap.set("n", "0", "^")
 vim.keymap.set("n", ",", ";")
+vim.keymap.set("n", "<leader>b", ":buffers<CR>")
+vim.keymap.set("n", "<leader>l", "$")
+vim.keymap.set("n", "<leader>h", "^")
+vim.keymap.set("n", "<S-j>", ":bp<CR>")
+vim.keymap.set("n", "<S-k>", ":bn<CR>")

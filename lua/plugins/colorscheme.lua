@@ -11,7 +11,14 @@ return {
                     }
                 }
             })
-            vim.cmd("colorscheme rose-pine-main")
+            --vim.cmd("colorscheme rose-pine-main")
+        end
+    },
+    {
+        "shaunsingh/nord.nvim",
+        config = function()
+            vim.g.nord_disable_background = true
+            require("nord").set()
         end
     }
 }
