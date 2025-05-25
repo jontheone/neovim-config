@@ -94,7 +94,6 @@ M.buildWin = function(buf)
     return win
 end
 
-
 M.notify = function()
     local ns_id = vim.api.nvim_create_namespace("FloatHl")
     local currentBuf = vim.api.nvim_get_current_buf()
