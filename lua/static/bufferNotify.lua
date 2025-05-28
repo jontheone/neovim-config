@@ -31,6 +31,8 @@ M.setCursorPosition = function(buf, ns_id, win)
     end
 end
 
+
+
 M.buildBuf = function()
     local buf = vim.api.nvim_create_buf(false, true)
     vim.api.nvim_buf_set_lines(buf, 0, -1, false, M.getBuffers())

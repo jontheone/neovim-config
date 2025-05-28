@@ -7,7 +7,5 @@ vim.api.nvim_create_autocmd("BufNewFile", {
             '#+topic:',
             '#+type:',
         })
-        -- vim.keymap.set("n", "j", "gj", {buffer=vim.api.nvim_get_current_buf()})
-        -- vim.keymap.set("n", "k", "gk", {buffer=vim.api.nvim_get_current_buf()})
     end
 })
