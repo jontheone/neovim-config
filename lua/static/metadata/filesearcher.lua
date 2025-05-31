@@ -23,7 +23,7 @@ M.buildEntries = function(paths)
         entry.name = string.match(paths[i], "([^/\\]+%.md)$")
         entry.metadata = M.getMetadata(paths[i])
         entry.heat = 1
-        entry.hlInstructions = {}
+        entry.hl = {}
         table.insert(entries, entry)
     end
     table.sort(entries, function(a, b) return a.name < b.name end)
@@ -54,10 +54,14 @@ M.getLabel = function()
 end
 
 M.refreshBuf = function(buf, entry_state)
+    print(vim.inspect(entry_state))
     local lines = {}
     for i=1, #entry_state do
-        table.insert(lines, entry_state.name)
+        if not (entry_state[i].heat == 0) then
+            table.insert(lines, entry_state[i].name)
+        end
     end
+    print(vim.inspect(lines))
     vim.bo[buf].modifiable = true
     vim.api.nvim_buf_set_lines(buf, 0, -1, false, lines)
     vim.bo[buf].modifiable = false
@@ -91,6 +95,19 @@ M.newFile = function()
 end
 
 M.applyHl = function(buf, entry_state)
+    vim.api.nvim_buf_clear_namespace(buf, -1, 1, -1)
+    for i=1, #entry_state do
+        local hl = entry_state[i].hl
+        if hl then
+            if type(hl[1]) == "table" then
+                for j=1, #hl do
+                    vim.api.nvim_buf_add_highlight(buf, 0, "TermCursor", i, hl[j][1], hl[j][2])
+                end
+            elseif hl then
+                vim.api.nvim_buf_add_highlight(buf, 0, "TermCursor", i, hl[1], hl[2])
+            end
+        end
+    end
 end
 
 -- fuzzy search implementation
@@ -110,7 +127,7 @@ M.createWin = function(buf)
     return win, buf
 end
 
-M.convertToPattern = function(line)
+M.toPattern = function(line)
     local patternedLine = ""
     for letter in line:gmatch(".") do
         if letter:match("[%.%-%+%?%%%[%]%*%(%)]")  then
@@ -122,35 +139,83 @@ M.convertToPattern = function(line)
     return patternedLine
 end
 
-
-M.matchLetterSequence = function(line, entry)
-    for letter in line:gmatch(".") do
-        if entry:find(M.convertToPattern(letter)) then
-
+M.typoHeat = function(line, entry)
+    local sliceOneStart, sliceOneEnd
+    local sliceTwoStart, sliceTwoEnd
+    for i=1, #line do
+        local substring = line:sub(1, i)
+        local pos1, pos2 = entry:find(M.toPattern(substring))
+        if pos1 and pos2 then
+            sliceOneEnd, sliceOneEnd = pos1, pos2
         else
-            return false
+            break
         end
     end
+    if not (sliceOneStart and sliceOneEnd) then
+        return 0
+    end
+    for i=-1, (#line * -1), -1 do
+        local substring = line:sub(i)
+        local subEntry = entry:sub(sliceOneEnd)
+        local pos1, pos2 = subEntry:find(M.toPattern(substring))
+        if pos1 and pos2 then
+            sliceTwoStart, sliceTwoEnd = pos1, pos2
+            sliceTwoStart = sliceTwoStart + sliceOneEnd
+            sliceTwoEnd = sliceTwoEnd + sliceOneEnd
+        else
+            break
+        end
+    end
+    if not (sliceTwoStart and sliceTwoEnd) then
+        return 0
+    end
+    -- checks if it was actually a typo
+    if not (entry:match(line:sub(sliceOneStart, sliceOneEnd).. ".+"..line:sub(sliceTwoStart, sliceTwoEnd))) then
+        return 0
+    end
 
+    -- Calculate the amount of letters the user got right and the total percentege; 
+    -- needs to be long;
+    -- need to check if the both of the slices are not equal in order to subtract them; local rightLettersOne
+    local rightLettersTwo
+    if sliceOneEnd == sliceOneStart then
+        rightLettersOne = sliceOneEnd
+    else
+        rightlettersOne = sliceOneEnd - sliceOneStart
+    end
+    if sliceTwoEnd == sliceTwoStart then
+        rightLettersTwo = sliceTwoEnd
+    else
+        rightlettersTwo = sliceTwoEnd - sliceTwoStart
+    end
+    local totalLetters = rightLettersOne + rightLetterTwo
+    local results = math.ceil((totalLetters / #entry) * 100)
+    -- if the typo is at the begining it gets more points
+    if sliceOneStart == 1 then
+        return results + 3, {{sliceOneStart, sliceOneEnd}, {sliceTwoStart, sliceTwoEnd}}
+    else
+        return results, {{sliceOneStart, sliceOneEnd}, {sliceTwoStart, sliceTwoEnd}}
+    end
 end
 
-M.calculateHeat = function(line, entry)
-    local entryLength = entry:len()
-    local lineLength = line:len()
-    if lineLength > entryLenght then
+M.calculateHeatAndHl = function(line, entry)
+    local entryLength = #entry
+    local lineLength = #line
+    if lineLength > entryLength then
         return 0
-    elseif entry:match(string.format("^%s$", M.convertToPattern(line))) then
-        return 100
-    elseif entry:match(string.format("^%s.*$", M.convertToPattern(line))) then
-        return math.round((lineLength / entryLength)*100)
-    elseif entry:match(string.format("^.+%s.*", M.convertToPattern(line))) then 
-        return math.round(math.round((lineLength / entryLength)*100)*0.75)
-    elseif entry:match(string.format("[%s]", M.convertToPattern(line))) then
-        return
+    elseif entry:match(string.format("^%s$", M.toPattern(line))) then
+        return 100, {1, -1}
+    elseif entry:match(string.format("^%s.*$", M.toPattern(line))) then
+        local starthl, endhl = entry:find(M.toPattern(line))
+        return math.ceil((lineLength / entryLength)*100), {starthl, endhl}
+    elseif entry:match(string.format("^.+%s.*", M.toPattern(line))) then 
+        local starthl, endhl = entry:find(M.toPattern(line))
+        return math.ceil(math.ceil((lineLength / entryLength)*100)*0.75), {starthl, endhl}
+    elseif entry:match(string.format("[%s]", M.toPattern(line))) then
+        return math.ceil(M.typoHeat(line, entry)*0.50)
+    else
+        return 0
     end
-    local match = vim.regex(line )
-    local substring = vim.regex(string.format(".*(%s).*", line))
-    local randomLetters = vim.regex("")
 end
 
 M.fuzzy_search = function(entries, entry_state)
@@ -160,12 +225,9 @@ M.fuzzy_search = function(entries, entry_state)
         return entries
     end
     for i=1, #entry_state do
-        entry_state[i].heat, entry_state[i].hlInstructions = M.calculateHeat(line, entry_state[i])
-        if entry_state[i].heat == 0 then
-            table.remove(entry_state, i)
-        end
+        entry_state[i].heat, entry_state[i].hl = M.calculateHeatAndHl(line, entry_state[i].name)
     end
-    table.sort(entry_state, function(a, b) return a.heat >= b.heat end)
+    table.sort(entry_state, function(a, b) return a.heat > b.heat end)
     return entry_state
 end
 
@@ -188,9 +250,8 @@ M.buildBuf = function(bufEntries, opts)
     --autocmds
     local fuzzyBuf_gp = vim.api.nvim_create_augroup("fuzzy_find_buffer", {clear=true})
     
-    vim.api.nvim_create_autocmd("InsertChange", {
+    vim.api.nvim_create_autocmd("TextChangedI", {
         group=fuzzyBuf_gp,
-        buffer=fuzzyBuf,
         callback = function()
             entry_state = M.fuzzy_search(entries, entry_state)
             M.refreshBuf(buf, entry_state)
