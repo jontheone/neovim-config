@@ -93,146 +93,6 @@ M.newFile = function()
          vim.cmd("e "..vim.g.wiki_root..".assuntos/"..input)
     end  
 end
-
-M.applyHl = function(buf, entry_state)
-    vim.api.nvim_buf_clear_namespace(buf, -1, 1, -1)
-    for i=1, #entry_state do
-        local hl = entry_state[i].hl
-        if hl then
-            if type(hl[1]) == "table" then
-                for j=1, #hl do
-                    vim.api.nvim_buf_add_highlight(buf, 0, "TermCursor", i, hl[j][1], hl[j][2])
-                end
-            elseif hl then
-                vim.api.nvim_buf_add_highlight(buf, 0, "TermCursor", i, hl[1], hl[2])
-            end
-        end
-    end
-end
-
--- fuzzy search implementation
-
-M.createWin = function(buf)
-    local buf = vim.api.nvim_create_buf(false, true)
-    local opts = {
-        relative = "editor",
-        style = "minimal",
-        border = "rounded",
-        row = vim.o.lines,
-        col = math.floor(vim.o.columns / 2),
-        height = 1,
-        width = vim.o.columns
-    } 
-    local win = vim.api.nvim_open_win(buf, false, opts)
-    return win, buf
-end
-
-M.toPattern = function(line)
-    local patternedLine = ""
-    for letter in line:gmatch(".") do
-        if letter:match("[%.%-%+%?%%%[%]%*%(%)]")  then
-            patternedLine = patternedLine.."%"..letter
-        else
-            patternedLine = patternedLine..letter
-        end
-    end
-    return patternedLine
-end
-
-M.typoHeat = function(line, entry)
-    local sliceOneStart, sliceOneEnd
-    local sliceTwoStart, sliceTwoEnd
-    for i=1, #line do
-        local substring = line:sub(1, i)
-        local pos1, pos2 = entry:find(M.toPattern(substring))
-        if pos1 and pos2 then
-            sliceOneEnd, sliceOneEnd = pos1, pos2
-        else
-            break
-        end
-    end
-    if not (sliceOneStart and sliceOneEnd) then
-        return 0
-    end
-    for i=-1, (#line * -1), -1 do
-        local substring = line:sub(i)
-        local subEntry = entry:sub(sliceOneEnd)
-        local pos1, pos2 = subEntry:find(M.toPattern(substring))
-        if pos1 and pos2 then
-            sliceTwoStart, sliceTwoEnd = pos1, pos2
-            sliceTwoStart = sliceTwoStart + sliceOneEnd
-            sliceTwoEnd = sliceTwoEnd + sliceOneEnd
-        else
-            break
-        end
-    end
-    if not (sliceTwoStart and sliceTwoEnd) then
-        return 0
-    end
-    -- checks if it was actually a typo
-    if not (entry:match(line:sub(sliceOneStart, sliceOneEnd).. ".+"..line:sub(sliceTwoStart, sliceTwoEnd))) then
-        return 0
-    end
-
-    -- Calculate the amount of letters the user got right and the total percentege; 
-    -- needs to be long;
-    -- need to check if the both of the slices are not equal in order to subtract them; local rightLettersOne
-    local rightLettersTwo
-    if sliceOneEnd == sliceOneStart then
-        rightLettersOne = sliceOneEnd
-    else
-        rightlettersOne = sliceOneEnd - sliceOneStart
-    end
-    if sliceTwoEnd == sliceTwoStart then
-        rightLettersTwo = sliceTwoEnd
-    else
-        rightlettersTwo = sliceTwoEnd - sliceTwoStart
-    end
-    local totalLetters = rightLettersOne + rightLetterTwo
-    local results = math.ceil((totalLetters / #entry) * 100)
-    -- if the typo is at the begining it gets more points
-    if sliceOneStart == 1 then
-        return results + 3, {{sliceOneStart, sliceOneEnd}, {sliceTwoStart, sliceTwoEnd}}
-    else
-        return results, {{sliceOneStart, sliceOneEnd}, {sliceTwoStart, sliceTwoEnd}}
-    end
-end
-
-M.calculateHeatAndHl = function(line, entry)
-    local entryLength = #entry
-    local lineLength = #line
-    if lineLength > entryLength then
-        return 0
-    elseif entry:match(string.format("^%s$", M.toPattern(line))) then
-        return 100, {1, -1}
-    elseif entry:match(string.format("^%s.*$", M.toPattern(line))) then
-        local starthl, endhl = entry:find(M.toPattern(line))
-        return math.ceil((lineLength / entryLength)*100), {starthl, endhl}
-    elseif entry:match(string.format("^.+%s.*", M.toPattern(line))) then 
-        local starthl, endhl = entry:find(M.toPattern(line))
-        return math.ceil(math.ceil((lineLength / entryLength)*100)*0.75), {starthl, endhl}
-    elseif entry:match(string.format("[%s]", M.toPattern(line))) then
-        return math.ceil(M.typoHeat(line, entry)*0.50)
-    else
-        return 0
-    end
-end
-
-M.fuzzy_search = function(entries, entry_state)
-    local line = vim.fn.getline(vim.fn.line("."))
-    line = line:match"^%s*(.-)%s*$"
-    if line == "" then
-        return entries
-    end
-    for i=1, #entry_state do
-        entry_state[i].heat, entry_state[i].hl = M.calculateHeatAndHl(line, entry_state[i].name)
-    end
-    table.sort(entry_state, function(a, b) return a.heat > b.heat end)
-    return entry_state
-end
-
--- End  of fuzzy implemantation
-
 -- End of buffer actions
 
 M.buildBuf = function(bufEntries, opts)
@@ -244,29 +104,6 @@ M.buildBuf = function(bufEntries, opts)
     vim.api.nvim_buf_set_lines(buf, 0, -1, false, bufEntries)
     vim.api.nvim_win_set_buf(vim.api.nvim_get_current_win(), buf)
 
-    -- FUZZY BAR
-    local fuzzyWin, fuzzyBuf = M.createWin()
-
-    --autocmds
-    local fuzzyBuf_gp = vim.api.nvim_create_augroup("fuzzy_find_buffer", {clear=true})
-    
-    vim.api.nvim_create_autocmd("TextChangedI", {
-        group=fuzzyBuf_gp,
-        callback = function()
-            entry_state = M.fuzzy_search(entries, entry_state)
-            M.refreshBuf(buf, entry_state)
-            M.applyHl(buf, entry_state)
-        end
-    }) 
-
-    --keymaps
-    
-    vim.keymap.set("n", "<ESC>", function() vim.api.nvim_set_current_win(win) end, {buffer=fuzzyBuf}) 
-    vim.keymap.set({"n", "i"}, "<CR>", function() vim.api.nvim_set_current_win(win)  end, {buffer=fuzzyBuf})
-
-    -- END OF FUZZY BAR
-
-
     -- buf options
     vim.bo[buf].modifiable = false
     vim.bo[buf].filetype = "vim"
@@ -275,7 +112,6 @@ M.buildBuf = function(bufEntries, opts)
     vim.keymap.set("n", "<CR>", function() M.accept(entry_state) end, { buffer=buf })
     vim.keymap.set("n", "d", function() entries = M.delete(entry_state, buf) end, {buffer=buf})
     vim.keymap.set("n", "n", function() M.newFile() end, {buffer=buf})
-    vim.keymap.set("n", "s", function() vim.api.nvim_set_current_win(fuzzyWin) end, {buffer=buf})
 
     --autocmds
     local buf_gp = vim.api.nvim_create_augroup("finder_buffer", {clear=true})
@@ -283,14 +119,11 @@ M.buildBuf = function(bufEntries, opts)
     vim.api.nvim_create_autocmd("BufEnter", {
         group=buf_gp,
         callback = function(ev)
-            if vim.api.nvim_buf_is_valid(buf) and vim.api.nvim_win_is_valid(fuzzyWin) then
+            if vim.api.nvim_buf_is_valid(buf) then
                 local newBuf = vim.api.nvim_get_current_buf()
-                if not (newBuf == fuzzyBuf) and not (newBuf == buf) then
-                    vim.api.nvim_win_close(fuzzyWin, true)
+                if not (newBuf == buf) then
                     vim.api.nvim_buf_delete(buf, {force=true})
-                    vim.api.nvim_buf_delete(fuzzyBuf, {force=true})
                     vim.api.nvim_del_augroup_by_id(buf_gp)
-                    vim.api.nvim_del_augroup_by_id(fuzzyBuf_gp)
                 end
             end
         end
