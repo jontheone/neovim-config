@@ -1,5 +1,6 @@
 local M = {}
 
+-- notify function
 M.getBuffers = function()
     local listed_buffers = {}
     for _, buf in ipairs(vim.api.nvim_list_bufs()) do
@@ -62,7 +63,7 @@ M.bufferConfig = function(currentBuf, mainWin, ns_id, win, buf)
     
     vim.api.nvim_create_autocmd("BufEnter", {group=group_id, callback=function()
         M.winRefresh(buf, win)
-        M.setCursorPosition(buf, ns_id, win)       
+        M.setCursorPosition(buf, ns_id, win)
         if vim.api.nvim_win_is_valid(win) then
             timer:stop()
             timer:start(timeout, 0, vim.schedule_wrap(function() M.selfClose(win) end))
@@ -105,7 +106,10 @@ M.notify = function()
     vim.g.buffer_active = true
     vim.api.nvim_win_set_hl_ns(win, ns_id)
     M.bufferConfig(currentBuf, mainWin, ns_id, win, buf)
-    M.setCursorPosition(buf, ns_id) 
+    M.setCursorPosition(buf, ns_id)
 end
+-- end of notify functin
+
+
 
 return M
