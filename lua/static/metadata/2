@@ -140,7 +140,7 @@ M.aureaProportion = function()
         ['links'] = math.floor(vim.o.columns * 0.17),
         ['topic'] = math.floor(vim.o.columns * 0.17),
         ['files'] = math.floor(vim.o.columns * 0.25),
-        ['preview'] = math.floor(vim.o.columns * 0.50) - 2
+        ['preview'] = math.floor(vim.o.columns * 0.50) - 2,
     }
     local minimalSize = math.floor(vim.o.columns * 0.05)
     local focusedMenu
@@ -152,15 +152,16 @@ M.aureaProportion = function()
     end
     assert(focusedMenu, "how da fuck are you not focusing in any menu at the moment")
     for key, menu in pairs(state.menus) do
-        if key == focusedMenu and vim.api.nvim_win_is_valid(menu.win) then
+        if key == focusedMenu then
             vim.api.nvim_win_set_config(menu.win, {
-                width = expandSize[key]
+
             })
-        elseif vim.api.nvim_win_is_valid(menu.win) then
+        else
             vim.api.nvim_win_set_config(menu.win, {
-                width = minimalSize
+
             })
         end
+
     end
 end
 
@@ -172,7 +173,6 @@ M.moveLeft = function(menu)
         M.unsetFocusAll()
         state.menus[prevMenu].active = true
         M.aureaProportion()
-        return
     end
     print("Cannot move left from links window")
 end
@@ -184,12 +184,9 @@ M.moveRight = function(menu)
             vim.api.nvim_set_current_win(state.menus[nextMenu].win)
             M.unsetFocusAll()
             state.menus[nextMenu].active = true
-            M.aureaProportion()
-            return
         else
             M.createWindow(nextMenu, true)
             M.aureaProportion()
-            return
         end
     end
     print("youre already in the preview window")
