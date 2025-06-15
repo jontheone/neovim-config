@@ -50,6 +50,25 @@ local state = {
         }
     },
     buffers = {},
+    bufCreate = {
+        ["links"] = function(line)
+            local buf = vim.api.nvim_create_buf(false, false)
+
+            return buf
+        end,
+        ["topic"] = function(line)
+            local buf = vim.api.nvim_create_buf(false, false)
+            return buf
+        end,
+        ["files"] = function(line)
+            local buf = vim.api.nvim_create_buf(false, false)
+            return buf
+        end,
+        ["preview"] =  function(line)
+            local buf = vim.api.nvim_create_buf(false, false)
+            return buf
+        end
+    }
 }
 vim.g.state_started = false
 local M = {}
@@ -60,9 +79,9 @@ M.unsetFocusAll = function()
     end
 end
 
-M.createBuf = function(menu)
+M.createBuf = function(menu, line)
     local name = state.menus[menu].name
-    local buf = vim.api.nvim_create_buf(false, false)
+    local buf = state.bufCreate[menu](line or "")
     vim.api.nvim_buf_set_name(buf, name)
     vim.bo[buf].modifiable = false
     print("creating new buffer: "..buf.." for menu: "..name)
@@ -92,7 +111,7 @@ M.newSession = function()
     local opts = {
         title = "links",
         relative = "editor",
-        width = 40,
+        width = math.floor(vim.o.columns * 0.17),
         height = vim.o.lines-3,
         row = 1,
         col = 1,
@@ -156,10 +175,32 @@ M.aureaProportion = function()
             vim.api.nvim_win_set_config(menu.win, {
                 width = expandSize[key]
             })
+            menu.opts.width = expandSize[key]
         elseif vim.api.nvim_win_is_valid(menu.win) then
             vim.api.nvim_win_set_config(menu.win, {
-                width = minimalSize
+                width = minimalSize })
+            menu.opts.width = minimalSize
+        end
+    end
+    for i=1, 4 do
+        local currmenu
+        local win
+        for key, menu in pairs(state.menus) do
+            if menu.id == i then
+                currmenu = key
+                win = menu.win
+            end
+        end
+        local prevMenu = M.getPrevMenuName(i)
+        local valid = vim.api.nvim_win_is_valid
+        if (prevMenu and (valid(state.menus[prevMenu].win) and valid(win))) then
+            local colPos = (state.menus[prevMenu].opts.col + state.menus[prevMenu].opts.width) + 3
+            vim.api.nvim_win_set_config(win, {
+                col = colPos,
+                row = 1,
+                relative = "editor"
             })
+            state.menus[currmenu].opts.col = colPos
         end
     end
 end
@@ -198,13 +239,13 @@ end
 M.createWindow = function(menu, focus)
     local buf
     if not (vim.api.nvim_buf_is_valid(state.menus[menu].buf)) then
-        buf = M.createBuf(menu)
+        buf = M.createBuf(menu, vim.fn.getline(vim.fn.line(".")))
         state.menus[menu].buf = buf
     else
         buf = state.menus[menu].buf
     end
     local opts
-    if #state.menus[menu].opts == 0 then
+    if not state.menus[menu].opts.row then
         opts = {
             title = state.menus[menu].name,
             relative = "editor",
