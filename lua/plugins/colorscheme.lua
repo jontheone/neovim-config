@@ -11,23 +11,21 @@ return {
                     }
                 }
             })
-            vim.cmd("colorscheme rose-pine-main")
+            --vim.cmd("colorscheme rose-pine-main")
         end
     },
     {
         "shaunsingh/nord.nvim",
         config = function()
-            --vim.g.nord_disable_background = true
-            --require("nord").set()
+            vim.g.nord_disable_background = true
+            require("nord").set()
         end
     },
     {
       "vague2k/vague.nvim",
       config = function()
         -- NOTE: you do not need to call setup if you don't want to.
-        require("vague").setup({
-
-        })
+        require("vague").setup({})
       end
     }
 }

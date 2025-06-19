@@ -1,11 +1,13 @@
+local data = require("static.metadata.datacollection")
 ---@class window
 ---@field name string
 ---@field active boolean
 ---@field buf number
+---@field win number
 ---@field id number
 ---@field opts table
 ---@field created boolean
-local window = {}
+---@field choiceLogs table
 local state = {
     menus = {
         ---@type window
@@ -16,7 +18,8 @@ local state = {
             win = -1,
             id = 1,
             opts = {},
-            created = false
+            created = false,
+            choiceLogs = {}
         },
         ---@type window
         ["topic"] = {
@@ -26,7 +29,8 @@ local state = {
             win = -1,
             id = 2,
             opts = {},
-            created = false
+            created = false,
+            choiceLogs = {}
         },
         ---@type window
         ["files"] = {
@@ -36,7 +40,8 @@ local state = {
             win = -1,
             id = 3,
             opts = {},
-            created = false
+            created = false,
+            choiceLogs = {}
         },
         ---@type window
         ["preview"] = {
@@ -46,26 +51,36 @@ local state = {
             win = -1,
             id = 4,
             opts = {},
-            created = false
+            created = false,
+            choiceLogs = {}
         }
     },
     buffers = {},
     bufCreate = {
         ["links"] = function(line)
-            local buf = vim.api.nvim_create_buf(false, false)
-
+            print("retrieving links information")
+            local buf = vim.api.nvim_create_buf(false, true)
+            local links = data.GetAllLinks()
+            table.sort(links)
+            table.remove(links, 1)
+            vim.bo[buf].modifiable = true
+            vim.api.nvim_buf_set_lines(buf, 0, -1, false, links)
+            vim.bo[buf].modifiable = false
             return buf
         end,
         ["topic"] = function(line)
-            local buf = vim.api.nvim_create_buf(false, false)
+            print(vim.inspect(line))
+            local buf = vim.api.nvim_create_buf(false, true)
             return buf
         end,
         ["files"] = function(line)
-            local buf = vim.api.nvim_create_buf(false, false)
+            print("retrieving files information")
+            local buf = vim.api.nvim_create_buf(false, true)
             return buf
         end,
         ["preview"] =  function(line)
-            local buf = vim.api.nvim_create_buf(false, false)
+            print("retrieving preview information")
+            local buf = vim.api.nvim_create_buf(false, true)
             return buf
         end
     }
@@ -86,11 +101,12 @@ M.createBuf = function(menu, line)
     vim.bo[buf].modifiable = false
     print("creating new buffer: "..buf.." for menu: "..name)
 
+
     vim.keymap.set("n", "l", function() M.moveRight(menu) end, { buffer = buf, silent = true })
-    vim.keymap.set("n", "h", function() M.moveLeft(menu) end, { buffer = buf, silent = true })
-    vim.keymap.set("n", "q", function() M.endSession() end, { buffer = buf, silent = true })
+    vim.keymap.set("n", "h", function() M.moveLeft(menu) end, { buffer = buf, silent = true }) vim.keymap.set("n", "q", function() M.endSession() end, { buffer = buf, silent = true })
     vim.keymap.set("n", "qu", function() M.terminateSession() end, { buffer = buf, silent = true })
     vim.keymap.set("n", "a", function() print("current state of the menus: \n"..vim.inspect(state.menus)) end, { buffer = buf, silent = true })
+
     return buf
 end
 
@@ -99,6 +115,7 @@ M.endSession = function()
         if vim.api.nvim_win_is_valid(pair.win) then
             vim.api.nvim_win_close(pair.win, true)
             pair.win = -1
+            pair.choiceLogs = {}
         end
     end
     vim.api.nvim_del_augroup_by_name("index")
@@ -145,7 +162,7 @@ end
 
 M.getMenuPos = function(menu)
     local prevMenu = M.getPrevMenuName(state.menus[menu].id)
-    print(vim.inspect(prevMenu))
+    -- print(vim.inspect(prevMenu))
     if not prevMenu then
         return 1
     end
@@ -220,15 +237,23 @@ end
 
 M.moveRight = function(menu)
     local nextMenu = M.getNextMenuName(state.menus[menu].id)
+    local line = vim.fn.getline(vim.fn.line("."))
+    table.insert(state.menus[menu].choiceLogs, line)
     if nextMenu then
         if vim.api.nvim_win_is_valid(state.menus[nextMenu].win) then
-            vim.api.nvim_set_current_win(state.menus[nextMenu].win)
-            M.unsetFocusAll()
-            state.menus[nextMenu].active = true
-            M.aureaProportion()
-            return
+            if line == state.menus[menu].choiceLogs[-1] then
+                vim.api.nvim_set_current_win(state.menus[nextMenu].win)
+                M.unsetFocusAll()
+                state.menus[nextMenu].active = true
+                M.aureaProportion()
+                return
+            else
+                local buf = M.createBuf()
+                state.menue[nextMenu].buf = buf
+                vim.api.nvim_win_set_buf(state.menue[nextMenu].win, state.menue[nextMenu].buf)
+            end
         else
-            M.createWindow(nextMenu, true)
+            M.createWindow(nextMenu, line, true)
             M.aureaProportion()
             return
         end
@@ -236,10 +261,10 @@ M.moveRight = function(menu)
     print("youre already in the preview window")
 end
 
-M.createWindow = function(menu, focus)
+M.createWindow = function(menu, line, focus)
     local buf
     if not (vim.api.nvim_buf_is_valid(state.menus[menu].buf)) then
-        buf = M.createBuf(menu, vim.fn.getline(vim.fn.line(".")))
+        buf = M.createBuf(menu, line)
         state.menus[menu].buf = buf
     else
         buf = state.menus[menu].buf
@@ -279,7 +304,7 @@ M.reatachSession = function()
     for key, menu in pairs(state.menus) do
         if menu.created then
             print("Attaching menu: "..menu.name)
-            M.createWindow(key, menu.active or nil)
+            M.createWindow(key, nil, menu.active or nil)
         end
     end
 end
@@ -298,13 +323,16 @@ end
 
 M.terminateSession = function()
     for _, menu in pairs(state.menus) do
-        vim.api.nvim_win_close(menu.win, true)
-        vim.api.nvim_buf_delete(menu.buf, { force = true })
+        if vim.api.nvim_win_is_valid(menu.win) and vim.api.nvim_buf_is_valid(menu.buf) then
+            vim.api.nvim_win_close(menu.win, true)
+            vim.api.nvim_buf_delete(menu.buf, { force = true })
+        end
         menu.active = false
         menu.created = false
         menu.buf = -1
         menu.win = -1
         menu.opts = {}
+        menu.choiceLogs = {}
     end
     state.buffers = {}
     vim.g.state_started = false

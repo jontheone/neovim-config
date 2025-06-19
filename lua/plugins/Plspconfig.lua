@@ -11,6 +11,7 @@ return {
     config = function()
         local dap = require("dap")
         local dapui = require("dapui")
+        local lsp = require("lspconfig")
         require("mason").setup()
         require("mason-nvim-dap").setup({
             ensure_installed = {
@@ -25,8 +26,25 @@ return {
                 "cssls",
                 "jsonls",
                 "lua_ls",
+                "biome",
             }
         })
+        lsp["clangd"].setup({})
+        lsp["pyright"].setup({})
+        lsp["biome"].setup({})
+        lsp["lua_ls"].setup({
+            settings = {
+                Lua = {
+                    diagnostics = {
+                        globals = { 'vim' }
+                    }
+                }
+            }
+        })
+        lsp["cssls"].setup({})
+        lsp["html"].setup({})
+        --vim.diagnostic.config({virtual_text = true, signs = true})
+
         dapui.setup()
         dap.listeners.before.attach.dapui_config = function()
           dapui.open()

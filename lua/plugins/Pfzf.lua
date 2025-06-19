@@ -16,5 +16,6 @@ return {
         vim.keymap.set("n", "<leader>fl", function() fzf.lines() end)
         vim.keymap.set("n", "<leader>fc", function() fzf.files({ cwd="~/.config/nvim" }) end)
         vim.keymap.set("n", "<leader>fb", function() fzf.buffers() end)
+        vim.keymap.set("n", "<leader>fq", function() fzf.quickfix() end)
     end
 }
