@@ -186,8 +186,7 @@ M.ParseYaml = function(str)
         elseif line:match("^.+:") then
             line = line:match("^%s*(.-)%s*$")
             local key = line:match("^(.+):")
-            if key then
-                metadata[key] = {}
+            if key then metadata[key] = {}
                 nest = key
             end
         elseif line:match("^%s+-%s.*") then
@@ -247,61 +246,13 @@ M.LabelExists = function(filepath, label)
     end
 end
 
-M.GetSingleLabel = function(filepath, label)
-    assert(vim.uv.fs_stat(filepath), "Invalid file path")
-    filepath = vim.fs.abspath(filepath)
-    local lines = {}
-    for item in io.lines(filepath) do
-        table.insert(lines, item)
-    end
-    local insideYaml = false
-    local i = 0
-    local iYaml = 0
-    for line in io.lines(filepath) do
-        if line:match("%s*%-%-%-%s*") then
-            insideYaml = not (insideYaml)
-            goto skip
-        end
-        if (not insideYaml) and (i >= 5) then
-            break
-        end
-        if insideYaml then
-            if line:match("^"..label..":%s.+") then
-                local key = line:match("^".."("..label..")"..":%s.+")
-                local data = line:match("^"..label..":%s(.+)")
-                return {key, data}
-            elseif line:match("^"..label..":.*") then
-                local data = {}
-                for j=1, #lines do
-                    if string.match(lines[j], "^"..label..":.*") then
-                        for k=j, #lines do
-                            if string.match(lines[k], "^"..label..":.*") then
-                            elseif string.match(lines[k], "^%s+-%s") then
-                                table.insert(data, string.match(lines[k], "^%s+-%s(.*)"))
-                            else
-                                break
-                            end
-                        end
-                        break
-                    end
-                end
-                return {label, data}
-            end
-        end
-        ::skip::
-        i = i + 1
-    end
-end
-
 -- make it recursive
 M.GetFilesByYaml = function(label, data, path)
-    assert(label, "you need to specify the label")
-    assert(data, "you need to specify the data")
-    assert(type(data) == "table", "You must pass a table to make a search on the metadata, even if its only one value")
+    assert(type(label) == "string", "label must be a string")
     path = path or vim.g.wiki_root
     local out = io.popen(string.format("ls %s", path)) or {}
     local dir = out:read("a*")
-    out:close() 
+    out:close()
     local paths = {}
     for file in dir:gmatch("[^\n]+") do
         local filepath = vim.fs.joinpath(path, file)
@@ -312,42 +263,8 @@ M.GetFilesByYaml = function(label, data, path)
                 table.insert(paths, files[i])
             end
         else
-            local metadata = M.GetSingleLabel(filepath, label)
-            if type(metadata[2]) == "table" then
-                table.sort(metadata[2])
-                table.sort(data)
-                local include = true
-                for i=1, #data do
-                    local localData = data[i]
-                    local found = false
-                    for _, item in ipairs(metadata) do
-                        if item == localData then
-                            found = true
-                            break
-                        end
-                    end
-                    if not found then
-                        include = false
-                        break
-                    end
-                end
-                if include then
-                    table.insert(paths, filepath)
-                end
-            elseif type(metadata[2]) == "string" then
-                if not (#data == 1) then
-                    for i=1, #data do
-                        if data[i] == metadata[2] then
-                            table.insert(paths, filepath)
-                            break
-                        end
-                    end
-                else
-                    if data[1] == metadata[2] then
-                        table.insert(paths, metadata[2])
-                    end
-                end
-            end
+            local metadata = M.GetMetadata(filepath)
+            local key = metadata[label]
         end
     end
     return paths
