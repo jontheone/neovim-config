@@ -43,7 +43,7 @@ return {
         })
         lsp["cssls"].setup({})
         lsp["html"].setup({})
-        --vim.diagnostic.config({virtual_text = true, signs = true})
+        vim.diagnostic.config({virtual_text = true, signs = true})
 
         dapui.setup()
         dap.listeners.before.attach.dapui_config = function()

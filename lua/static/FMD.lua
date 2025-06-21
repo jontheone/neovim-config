@@ -13,10 +13,6 @@ M.followMdLinks = function()
         path = path:gsub("%./", "/")
         path = vim.fs.joinpath(vim.fn.expand("%:p:h") , path)
     end
-    if not (path:sub(-3) == ".md") then
-        print("caminho inválido")
-        return
-    end
     if path:sub(1, 1) == "#" then
         local lines = vim.api.nvim_buf_get_lines(0, 0, -1, false)
         for i, line in ipairs(lines) do

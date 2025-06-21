@@ -135,7 +135,7 @@ end
 M.main = function()
     local opts = {}
     opts.args = M.getLabel()
-    local paths = data.GetDataByLabel(opts.args)
+    local paths = data.GetFileByLink(opts.args)
     local entries = M.buildEntries(paths)
     local BufEntries = M.buildBufEntries(entries)
     local buf = M.buildBuf(BufEntries, {args=opts.args, entries=entries})
