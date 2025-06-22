@@ -171,51 +171,7 @@ end
 
 -- Get metadata from a certain file path
 
-M.ParseYaml = function(str)
-    local metadata = {}
-    local nest
-    for line in str:gmatch("[^\n]+") do
-        if line:match("^.+:%s.+") then
-            nest = nil
-            line = line:match("^%s*(.-)%s*$")
-            local label = line:match("^(.+):%s.+")
-            local data  = line:match("^.+:%s(.+)")
-            if label and data then
-                metadata[label] = data
-            end
-        elseif line:match("^.+:") then
-            line = line:match("^%s*(.-)%s*$")
-            local key = line:match("^(.+):")
-            if key then metadata[key] = {}
-                nest = key
-            end
-        elseif line:match("^%s+-%s.*") then
-            line = line:match("^%s+-%s(.*)")
-            line = line:match("^%s*(.-)%s*$")
-            local label
-            local data
-            if line:find(":") then
-                label = line:match("^(.+):") data = line:match("^.+:%s(.*)")
-            else
-                data = line
-            end
-            if nest then
-                if label and data then
-                    metadata[nest][label] = data
-                elseif data then
-                    table.insert(metadata[nest], data)
-                end
-            end
-        end
-    end
-    return metadata
-end
-
----@param filepath string
----@return table
-M.GetMetadata = function(filepath)
-    assert(vim.uv.fs_stat(filepath), "Invalid file path")
-    filepath = vim.fs.abspath(filepath)
+M.GetYaml = function(filepath)
     local insideYaml = false
     local yaml = ""
     local i = 0
@@ -233,44 +189,153 @@ M.GetMetadata = function(filepath)
         ::skip::
         i = i + 1
     end
-    local metadados = M.ParseYaml(yaml)
-    return metadados
+    return yaml
 end
 
-M.LabelExists = function(filepath, label)
-    local metadata = M.GetMetadata(filepath)
-    if metadata[label] then
-        return metadata[label]
-    else
-        return
+M.TableIn = function(tbl1, tbl2)
+end
+
+M.TableEquals = function(tbl1, tbl2)
+end
+
+M.TypeOfPath = function(path)
+    assert(path, "Path cant be nil")
+    path = vim.fs.abspath(path)
+    assert(vim.uv.fs_stat(path), "path is invalid: "..path)
+    if os.execute(string.format(' [ -d "%s" ] ', path)) == 0 then
+        return "directory"
+    elseif os.execute(string.format(' [ -f "%s" ] ', path)) then
+        return "file"
     end
 end
 
--- make it recursive
-M.GetFilesByYaml = function(label, data, path)
-    assert(type(label) == "string", "label must be a string")
-    path = path or vim.g.wiki_root
-    local out = io.popen(string.format("ls %s", path)) or {}
-    local dir = out:read("a*")
+M.IterDir = function(dirpath)
+    assert(dirpath, "The paths directory cant be nil")
+    dirpath = vim.fs.abspath(dirpath)
+    assert(vim.uv.fs_stat(dirpath), "Invalid directory")
+    local dir = {}
+    local count = 0
+    local out = io.popen(string.format("ls %s", dirpath)) or {}
+    for item in out:lines() do
+        table.insert(dir, vim.fs.joinpath(dirpath, item))
+    end
     out:close()
-    local paths = {}
-    for file in dir:gmatch("[^\n]+") do
-        local filepath = vim.fs.joinpath(path, file)
-        filepath = vim.fs.abspath(filepath)
-        if os.execute(string.format(' [ -d "%s" ] ', filepath)) == 0 then
-            local files = M.GetFilesByYaml(label, data, filepath) or {}
-            for i=1, #files do
-                table.insert(paths, files[i])
-            end
-        else
-            local metadata = M.GetMetadata(filepath)
-            local key = metadata[label]
+    return function()
+        count = count + 1
+        if count > #dir then
+            return nil
         end
+        local type = M.TypeOfPath(dir[count])
+        return dir[count], type
+    end
+end
+
+M.YamlIter = function(filepath)
+    local function iterfunc()
+        local yaml = M.GetYaml(filepath)
+        return function(redo)
+            if redo then
+                yaml = redo..yaml
+            else
+                local pos = yaml:find("\n")
+                if not pos then
+                    return nil
+                end
+                local line = yaml:sub(1, pos)
+                yaml = yaml:sub(pos+1)
+                return line
+            end
+        end
+    end
+    local iter = iterfunc()
+    return function()
+        local line = iter()
+        if not line then
+            return nil
+        end
+        if line:match("^.+:%s.+") then
+            local label = line:match("^(.+):%s.+")
+            local data = line:match("^.+:%s(.+)\n")
+            return label, data
+        elseif line:match("^.+:%s*.*") then
+            local label = line:match("^(.+):%s*.*")
+            local data = {}
+            while true do
+                local nextLine = iter()
+                if not nextLine then
+                    return nil
+                end
+                if not nextLine:match("^%s+-%s.*") then
+                    iter(nextLine)
+                    break
+                end
+                local listItem = nextLine:match("^%s+-%s(.+)\n")
+                if listItem then
+                    table.insert(data, listItem)
+                end
+            end
+            return label, data
+        end
+    end
+end
+
+M.GetSingleLabelData = function(filepath, label)
+    filepath = vim.fs.abspath(filepath) or ""
+    assert(label, "You need to specify a label  to do a search")
+    assert(type(label) == "string", "The label must be a string")
+    assert(filepath, "You need to pass a filepath in order to do the search")
+    assert(vim.uv.fs_stat(filepath), "Filepath does not exist")
+    assert(not (M.TypeOfPath(filepath) == "directory"), "You need to pass in a readable file not a directory")
+    for key, pair in M.YamlIter(filepath) do
+        if key == label then
+            return {key, pair}
+        end
+    end
+end
+
+---@param filepath string
+---@return table
+M.GetMetadata = function(filepath)
+    filepath = filepath or ""
+    filepath = vim.fs.abspath(filepath)
+    assert(vim.uv.fs_stat(filepath), "Invalid file path")
+    local yaml = {}
+    for key, pair in M.YamlIter(filepath) do
+        yaml[key] = pair
+    end
+    return yaml
+end
+
+M.LabelExists = function(filepath, label)
+    filepath = vim.fs.abspath(filepath) or ""
+    assert(label, "You need to specify a label to do a search")
+    assert(type(label) == "string", "The label must be a string")
+    assert(filepath, "You need to pass a filepath in order to verify its metadata")
+    assert(vim.uv.fs_stat(filepath), "Filepath does not exist")
+    assert(not (M.TypeOfPath(filepath) == "directory"), "You need to pass in a readable file not a directory")
+    for key, pair in M.YamlIter(filepath) do
+        if key == label then
+            return true
+        end
+    end
+end
+
+
+-- The parameters will follow the same patter as the function made with the ripgrep implementation, if youre in doubt read the notations of function M.GetFilesByMetadata() in this file
+-- With the exception being that now you can actually specify a path if you want, its not obligatory, but good if you consider that now that i might start to dable in some latex
+M.GetFilesByYaml = function(metainfo, path)
+    assert(metainfo, "You must to specify the Info you wanna search")
+    assert(type(metainfo) == "table", "The info must be a table of tables")
+    assert(metainfo[1], "The table must be populated with at least one item")
+    path = path or vim.g.wiki_root
+    local paths = {}
+    for i=1, #metainfo do
+        
     end
     return paths
 end
 
-print(vim.inspect(M.GetFilesByYaml("_links", {"pessoal"})))
+--M.GetFilesByYaml("seila", "seila")
 
 return M
 

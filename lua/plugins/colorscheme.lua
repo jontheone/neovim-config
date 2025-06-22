@@ -22,10 +22,19 @@ return {
         end
     },
     {
-      "vague2k/vague.nvim",
-      config = function()
-        -- NOTE: you do not need to call setup if you don't want to.
-        require("vague").setup({})
-      end
+        "vague2k/vague.nvim",
+        config = function()
+            -- NOTE: you do not need to call setup if you don't want to.
+            require("vague").setup({})
+        end
+    },
+    {
+        'projekt0n/github-nvim-theme',
+        name = 'github-theme',
+        lazy = false, -- make sure we load this during startup if it is your main colorscheme
+        priority = 1000, -- make sure to load this before all the other start plugins
+        config = function()
+            --vim.cmd('colorscheme github_dark_dimmed')
+        end,
     }
 }
