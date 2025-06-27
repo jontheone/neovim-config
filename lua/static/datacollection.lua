@@ -14,7 +14,8 @@ M.GenPattern = function(label, data)
     elseif type(data) == "string" then
         dataPattern = dataPattern .. string.format("(?=.*%s)", data)
     end
-    local pattern = string.format([[^_%s:%s]], label, string.format(".*%s.*", dataPattern)) return string.format('"%s" ', pattern)
+    local pattern = string.format([[^%s: %s]], label, string.format(".*%s.*", dataPattern))
+    return string.format('"%s" ', pattern)
 end
 
 M.GetFilesByLink = function(label)
@@ -63,7 +64,7 @@ end
 ---@field priority number
 ---@field label string
 ---@field data table
----@param data metadata
+---@param data metadata[]
 ---@return table
 M.GetFilesByMetadata = function(data) -- function takes only one parameter, a table, and returns a table
     assert(type(data) == "table", "Metadata needs to be a table of tables, read the notations and comments before this function to understand")
@@ -193,9 +194,37 @@ M.GetYaml = function(filepath)
 end
 
 M.TableIn = function(tbl1, tbl2)
+    if #tbl1 > #tbl2 then
+        return false
+    end
+
+    for _, item in ipairs(tbl1) do
+        local continue = false
+        for  _, comp in ipairs(tbl2) do
+            if comp == item then
+                continue = true
+                break
+            end
+        end
+        if not continue then
+            return false
+        end
+    end
+    return true
 end
 
 M.TableEquals = function(tbl1, tbl2)
+    if not (#tbl1 == #tbl2) then
+        return false
+    end
+    table.sort(tbl1)
+    table.sort(tbl2)
+    for i=1, #tbl1 do
+        if not (tbl1[i] == tbl2[i]) then
+            return false
+        end
+    end
+    return true
 end
 
 M.TypeOfPath = function(path)
@@ -230,6 +259,13 @@ M.IterDir = function(dirpath)
     end
 end
 
+-- works like a cursor for the yaml
+-- Basically whenever you call the iterator with a yaml it moves the "cursor" to the next \n character and then parses and gives you the metadata  from the line that was just deleted
+-- If it encounters an entry with indentation it will call the iterator until the indentation stops and will put every line in a list and return it
+-- If you pass in an empty yaml string the cursor wont move to the next \n character and will return nil which will give the signal for the iterator to stop and no iteration will occur
+-- This function works with other functions in this file if you wanna ship it, you have to ship the whole file, and it requires an unix like system to work, why:
+    -- The function to test if a filepath is a directory or not
+    -- How i open and read the line of a file, in unix system the lines are \n, but in windows the lines are \n\r
 M.YamlIter = function(filepath)
     local function iterfunc()
         local yaml = M.GetYaml(filepath)
@@ -321,21 +357,51 @@ M.LabelExists = function(filepath, label)
 end
 
 
--- The parameters will follow the same patter as the function made with the ripgrep implementation, if youre in doubt read the notations of function M.GetFilesByMetadata() in this file
--- With the exception being that now you can actually specify a path if you want, its not obligatory, but good if you consider that now that i might start to dable in some latex
+-- The implementation of this function is different from the GetFileByMetadata() function in this file
+-- Since there is no more hierachy, the arguments are now back at key-value pair, beign the keys the metadata you wanna search and the value a string or table with the metadata you wanna filter
+-- This function is recursive and currently it only searches for .md files
+-- The implementation through ripgrep is much faster
 M.GetFilesByYaml = function(metainfo, path)
     assert(metainfo, "You must to specify the Info you wanna search")
-    assert(type(metainfo) == "table", "The info must be a table of tables")
-    assert(metainfo[1], "The table must be populated with at least one item")
+    assert(type(metainfo) == "table", "The info must be a key-value table")
+
     path = path or vim.g.wiki_root
     local paths = {}
-    for i=1, #metainfo do
-        
+    for filepath, filetype in M.IterDir(path) do
+        if filetype == "directory" and not (filepath:match("%.git")) then
+            local files = M.GetFilesByYaml(metainfo, filepath)
+            for i=1, #files do
+                table.insert(paths, files[i])
+            end
+        elseif filepath:sub(-3) == ".md" then
+            local metadata = M.GetMetadata(filepath)
+            for label, data in pairs(metainfo) do
+                assert(label, "You must use a key-value pair table to search through the metadata")
+                if not metadata[label] then
+                    break
+                end
+                local fileData = metadata[label]
+
+                if type(fileData) == "table" and type(data) == "table" then
+                    if #data > #fileData then
+                        break
+                    elseif #fileData > #data then
+                        if M.TableIn(data, fileData) then table.insert(paths, filepath) else break end
+                    else
+                        if M.TableEquals(data, fileData) then table.insert(paths, filepath) else break end
+                    end
+                elseif type(fileData) == "table" and type(data) == "string" then
+                    if M.TableIn({data}, fileData) then table.insert(paths, filepath) else break end
+                elseif type(fileData) == "string" and type(data) == "string" then
+                    fileData = fileData:match("^%s*(.-)%s*$")
+                    if fileData == data then table.insert(paths, filepath) else break end
+                else
+                    break
+                end
+            end
+        end
     end
     return paths
 end
 
---M.GetFilesByYaml("seila", "seila")
-
 return M
-

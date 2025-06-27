@@ -1,4 +1,4 @@
-local data = require("static.metadata.datacollection")
+local data = require("static.datacollection")
 local M = {}
 
 M.getMetadata = function(path)

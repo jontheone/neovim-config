@@ -43,7 +43,7 @@ return {
         })
         lsp["cssls"].setup({})
         lsp["html"].setup({})
-        vim.diagnostic.config({virtual_text = true, signs = true})
+        vim.diagnostic.config({virtual_text = true})
 
         dapui.setup()
         dap.listeners.before.attach.dapui_config = function()
@@ -73,8 +73,8 @@ return {
 --            cwd = '${workspaceFolder}',
 --          },
 --        }
-        vim.keymap.set("n", "|", function() dap.continue() end, { desc = "DAP: Continue" })
-        vim.keymap.set("n", "<leader>et", function() dap.toggle_breakpoint() end, { desc = "DAP: Step Over" })
+--        vim.keymap.set("n", "|", function() dap.continue() end, { desc = "DAP: Continue" })
+--        vim.keymap.set("n", "<leader>et", function() dap.toggle_breakpoint() end, { desc = "DAP: Step Over" })
 
     end
 }

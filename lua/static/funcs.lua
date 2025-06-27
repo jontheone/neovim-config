@@ -10,4 +10,4 @@ vim.keymap.set("n", "<CR>", function() fmd.followMdLinks() end)
 
 -- other modules
 
-require("static.filesystem")
+require("static.filesystem") -- this is the module for functions related to my filesystem

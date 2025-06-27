@@ -6,8 +6,12 @@ return {
             filetype = {
                 javascript = {
                     "node $file"
+                },
+                lua = {
+                    "lua $file"
                 }
             }
         })
+        vim.keymap.set("n", "|", ":RunCode<CR>")
     end
 }
