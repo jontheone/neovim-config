@@ -1,7 +1,6 @@
 local pastelinks = require("static.pastelinks")
 local mdrenderer = require('static.NoteRenderer')
 local filesearcher = require("static.filesearcher")
-local dbm = require("static.Databasem")
 
 print(vim.inspect(dbm))
 
