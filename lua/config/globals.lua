@@ -6,3 +6,4 @@ vim.opt.relativenumber = true
 vim.opt.number = true
 vim.g.clipboard = "xclip"
 vim.o.colorcolumn = tostring(math.floor(vim.o.columns * 0.9))
+vim.opt.guicursor = ""
