@@ -1,29 +1,21 @@
 local M = {}
 
+local ts = require("nvim-treesitter.ts_utils")
+
+M.getfulllink = function(text)
+    
+end
+
 M.followMdLinks = function()
-    if not (string.sub(vim.fn.expand("%:t"), -3) == ".md") then
-        return
-    end
-    local link = vim.fn.expand("<cWORD>")
-    local path = link:match("^%[.+%]%((.+)%)$")
-    if not path then
-        return
-    end
-    if not path:match("^%~/.+$") then
-        path = path:gsub("%./", "/")
-        path = vim.fs.joinpath(vim.fn.expand("%:p:h") , path)
-    end
-    if path:sub(1, 1) == "#" then
-        local lines = vim.api.nvim_buf_get_lines(0, 0, -1, false)
-        for i, line in ipairs(lines) do
-            local header =  string.gsub(string.gsub(path, "-", " "), "^(#+)(.+)$", "%1 %2")
-            if header == line then
-                vim.api.nvim_win_set_cursor(0, {i, 1})
-                break
-            end
-        end
+    local node = ts.get_node_at_cursor()
+    local ntype = node:type()
+    local next_sibling = node:next_named_sibling()
+    if ntype == "link_destination" then
+        vim.cmd(string.format("e %s", M.getfulllink(vim.treesitter.get_node_text(node))))
+    elseif ntype == "link_text" or ntype == "inline_link" then
+        vim.cmd(string.format("e %s", M.getfulllink(vim.treesitter.get_node_text(next_sibling))))
     else
-        vim.cmd.edit(path)
+        return
     end
 end
 
