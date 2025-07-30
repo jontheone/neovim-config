@@ -1,4 +1,0 @@
-# seila
-
-
-[seila](sila.md)

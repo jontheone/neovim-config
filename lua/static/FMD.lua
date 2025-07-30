@@ -2,8 +2,25 @@ local M = {}
 
 local ts = require("nvim-treesitter.ts_utils")
 
-M.getfulllink = function(text)
-    
+local function getfulllink(text)
+    if text:match(".+://") then
+        local out = io.popen(string.format("google-chrome-stable %s 2> /dev/null", text)) or {}
+        local entries = out:read("*a")
+        print(entries:gsub("\n", ""))
+        out:close()
+        return
+    elseif text:sub(1, 1) == "/" or text:sub(1, 2) == "~/" then
+        return text
+    elseif text:sub(1, 2) == "-/" then
+        local path = text:sub(2)
+        return vim.fs.joinpath(vim.g.wiki_root, path)
+    elseif text:match(".+%.md") then
+        local currpath = vim.fn.expand("%:p:h")
+        return vim.fs.joinpath(currpath, text)
+    else
+        print("seila")
+        return
+    end
 end
 
 M.followMdLinks = function()
@@ -11,9 +28,15 @@ M.followMdLinks = function()
     local ntype = node:type()
     local next_sibling = node:next_named_sibling()
     if ntype == "link_destination" then
-        vim.cmd(string.format("e %s", M.getfulllink(vim.treesitter.get_node_text(node))))
+        local text = getfulllink(vim.treesitter.get_node_text(node, 0))
+        if text then
+            vim.cmd(string.format("e %s", text))
+        end
     elseif ntype == "link_text" or ntype == "inline_link" then
-        vim.cmd(string.format("e %s", M.getfulllink(vim.treesitter.get_node_text(next_sibling))))
+        local text = getfulllink(vim.treesitter.get_node_text(next_sibling, 0))
+        if text then
+            vim.cmd(string.format("e %s", text))
+        end
     else
         return
     end
