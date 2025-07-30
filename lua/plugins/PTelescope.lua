@@ -7,9 +7,9 @@ return {
             defaults = {
                 mappings = {
                     i = {
-                        ["C-j"] = "move_selection_next",
-                        ["C-k"] = "move_selection_previous",
-                        ["C-x"] = "delete_buffer",
+                        ["<C-j>"] = "move_selection_next",
+                        ["<C-k>"] = "move_selection_previous",
+                        ["<C-x>"] = "delete_buffer",
                     }
                 }
             }

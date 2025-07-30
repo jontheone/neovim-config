@@ -1,5 +1,4 @@
 local fmd = require("static.FMD")
-local buffer_list = require("static.DisplayBuf")
 
 --commands
 
@@ -10,4 +9,3 @@ vim.keymap.set("n", "<CR>", function() fmd.followMdLinks() end)
 
 -- other modules
 
-require("static.filesystem") -- this is the module for functions related to my filesystem
