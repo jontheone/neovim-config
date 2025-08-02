@@ -43,8 +43,9 @@ return {
         "ellisonleao/gruvbox.nvim",
         config = function()
             require("gruvbox").setup({
-                tranparent_mode = true,
+                transparent_mode = true,
             })
+            vim.cmd("colorscheme gruvbox")
         end
     },
     {
@@ -54,7 +55,7 @@ return {
                 style = "storm",
                 transparent = true
             })
-            vim.cmd("colorscheme tokyonight")
+            --vim.cmd("colorscheme tokyonight")
         end
     }
 }

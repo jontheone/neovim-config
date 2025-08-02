@@ -27,22 +27,9 @@ return {
                 "jsonls",
                 "lua_ls",
                 "biome",
+                "texlab"
             }
         })
-        lsp["clangd"].setup({})
-        lsp["pyright"].setup({})
-        lsp["biome"].setup({})
-        lsp["lua_ls"].setup({
-            settings = {
-                Lua = {
-                    diagnostics = {
-                        globals = { 'vim' }
-                    }
-                }
-            }
-        })
-        lsp["cssls"].setup({})
-        lsp["html"].setup({})
         vim.diagnostic.config({virtual_text = true})
 
         dapui.setup()
