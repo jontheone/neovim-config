@@ -22,7 +22,7 @@ vim.keymap.set("n", "<leader>ts", function()
         string.format("date: %s", os.date("%m-%d-%Y")),
         string.format("title: %s", vim.fn.expand"%:t:r"),
         string.format("author: %s", "Jonh"),
-        "_links: ",
+        "links: ",
         "---"
     }
     setlines(0, (cursor-1), cursor, false, template)
@@ -37,8 +37,8 @@ vim.keymap.set("n", "<leader>td", function()
         string.format("date: %s", os.date("%m-%d-%Y")),
         string.format("title: %s", vim.fn.expand"%:t:r"),
         string.format("author: %s", "Jonh"),
-        "_links: ",
-        "_topic: ",
+        "links: ",
+        "topic: ",
         "---"
     }
     setlines(0, (cursor-1), cursor, false, template)
@@ -53,9 +53,9 @@ vim.keymap.set("n", "<leader>tf", function()
         string.format("date: %s", os.date("%m-%d-%Y")),
         string.format("title: %s", vim.fn.expand"%:t:r"),
         string.format("author: %s", "Jonh"),
-        "_links: ",
-        "_topic: ",
-        "_tags: ",
+        "links: ",
+        "topic: ",
+        "tags: [  ] ",
         "---"
     }
     setlines(0, (cursor-1), cursor, false, template)

@@ -5,7 +5,7 @@ return {
             require("rose-pine").setup({
                 dim_inactive_windows = true,
                 styles = {
-                    transparency = true
+                    transparency = false
                 },
                 palette = {
                     main = {
@@ -29,7 +29,8 @@ return {
         "vague2k/vague.nvim",
         config = function()
             -- NOTE: you do not need to call setup if you don't want to.
-            --require("vague").setup({})
+            require("vague").setup({})
+            vim.cmd("colorscheme vague")
         end
     },
     {
@@ -45,7 +46,7 @@ return {
             require("gruvbox").setup({
                 transparent_mode = true,
             })
-            vim.cmd("colorscheme gruvbox")
+            --vim.cmd("colorscheme gruvbox")
         end
     },
     {
@@ -55,7 +56,35 @@ return {
                 style = "storm",
                 transparent = true
             })
-            --vim.cmd("colorscheme tokyonight")
+--            vim.cmd("colorscheme tokyonight")
+--            vim.api.nvim_set_hl(0, "TelescopeNormal", { bg = "none" })
+--            vim.api.nvim_set_hl(0, "TelescopePreviewNormal", { bg = "none" })
+--            vim.api.nvim_set_hl(0, "TelescopePromptNormal", { bg = "none" })
+--            vim.api.nvim_set_hl(0, "TelescopeResultsNormal", { bg = "none" })
+--            vim.api.nvim_set_hl(0, "TelescopeBorder", { bg = "none" })
+--            vim.api.nvim_set_hl(0, "TelescopePromptBorder", { bg = "none" })
+--            vim.api.nvim_set_hl(0, "TelescopePreviewBorder", { bg = "none" })
+--            vim.api.nvim_set_hl(0, "TelescopeResultsBorder", { bg = "none" })
+        end
+    },
+    {
+        "nyoom-engineering/oxocarbon.nvim",
+        config = function()
+--            vim.cmd("colorscheme oxocarbon")
+--            vim.api.nvim_set_hl(0, "Normal", { bg = "none" })
+--            vim.api.nvim_set_hl(0, "NormalFloat", { bg = "none" })
+--            vim.api.nvim_set_hl(0, "FloatTitle", { bg = "none" })
+--            vim.api.nvim_set_hl(0, "FloatBorder", { bg = "none" })
+--            vim.api.nvim_set_hl(0, "NormalNC", { bg = "none" })
+--            vim.api.nvim_set_hl(0, "LineNr", { bg = "none" })
+--            vim.api.nvim_set_hl(0, "TelescopeNormal", { bg = "none" })
+--            vim.api.nvim_set_hl(0, "TelescopePreviewNormal", { bg = "none" })
+--            vim.api.nvim_set_hl(0, "TelescopePromptNormal", { bg = "none" })
+--            vim.api.nvim_set_hl(0, "TelescopeResultsNormal", { bg = "none" })
+--            vim.api.nvim_set_hl(0, "TelescopeBorder", { bg = "none" })
+--            vim.api.nvim_set_hl(0, "TelescopePromptBorder", { bg = "none" })
+--            vim.api.nvim_set_hl(0, "TelescopePreviewBorder", { bg = "none" })
+--            vim.api.nvim_set_hl(0, "TelescopeResultsBorder", { bg = "none" })
         end
     }
 }
