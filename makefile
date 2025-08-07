@@ -1,6 +1,6 @@
+psmanager.so: src/*.cpp
+	g++ src/*.cpp -lpq -fpic -shared -o lua/lib/psmanager.so
+
 deafult: 
 	g++ src/main.cpp src/update.cpp src/ErrorLogging.cpp src/yamlread.cpp -lpq -fpic -o main.out
 	./main.out
-
-psmanager.so: src/*.cpp
-	g++ src/*.cpp -lpq -fpic -shared -o lua/lib/psmanager.so

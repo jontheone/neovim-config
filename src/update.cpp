@@ -7,6 +7,7 @@
 #include "update.h"
 #include "yamlread.h"
 
+
 bool CheckExistance(PGconn* db,const char* query)
 {
     ErrorLogging err {};
@@ -79,8 +80,15 @@ bool NullifyRow(PGconn* db, File &file, ErrorLogging &err)
     return true;
 }
 
-// TODO: essa função
-char* RemoveSpaces(const char* str);
+// TODO: essa funçãob
+void RemoveSpaces(char* str)
+{
+    for (int i = 0; i<strlen(str); i++) {
+        if (str[i] == ' ') {
+            str[i] = '_';
+        }
+    }
+}
 
 void UpdateRow(PGconn* db, File &file, ErrorLogging &err)
 {
@@ -105,13 +113,14 @@ void UpdateRow(PGconn* db, File &file, ErrorLogging &err)
         if (yaml.type == T_NULL) {
             continue;
         } 
-        sprintf(buffer, "UPDATE wiki SET %s = '%s' where path = '%s'", RemoveSpaces(yaml.header), yaml.data, file.path);
+        RemoveSpaces(yaml.header);
+        sprintf(buffer, "UPDATE wiki SET %s = '%s' where path = '%s'", yaml.header, yaml.data, file.path);
         PGresult *UpdateRes = PQexec(db, buffer);
         if (PQresultStatus(UpdateRes) != PGRES_COMMAND_OK) {
             char secondary_buffer[120];
-            sprintf(secondary_buffer, "SELECT column_name FROM information_schema.columns WHERE column_name = '%s'", yaml.header);
+            sprintf(secondary_buffer, "SELECT column_name FROM information_schema.columns WHERE column_name = '%s' AND table_name = 'wiki'", yaml.header);
             if (!CheckExistance(db, secondary_buffer)) {
-                sprintf(secondary_buffer, "ALTER TABLE wiki ADD %s varchar(70)", RemoveSpaces(yaml.header));
+                sprintf(secondary_buffer, "ALTER TABLE wiki ADD %s varchar(70)", yaml.header);
                 PGresult* alterquery = PQexec(db, secondary_buffer);
                 if (PQresultStatus(alterquery) != PGRES_COMMAND_OK) {
                     err.message << PQresultErrorMessage(alterquery);
@@ -160,7 +169,7 @@ void InsertRow(PGconn* db, File &file, ErrorLogging &err)
 
 
 
-int Update(const char* wiki)
+int Update(const char* wiki, bool force)
 {
     ErrorLogging err {};
     PGconn* db = PQconnectdb("dbname=wiki");
@@ -183,27 +192,33 @@ int Update(const char* wiki)
         sprintf(buffer, "SELECT inode, lastwrote FROM wiki WHERE path = '%s'", node.path);
         PGresult* res;
         if (CheckExistance(db, buffer, res)) {
-            if (node.time != atoi(PQgetvalue(res, 0, PQfnumber(res, "lastwrote")))) 
+            if (node.time != atoi(PQgetvalue(res, 0, PQfnumber(res, "lastwrote"))) || force) 
                 UpdateRow(db, node, err);
+            PQclear(res);
         } else {
-            std::cout << node.title << std::endl;
-
+            PQclear(res);
             if (node.title != NULL) {
                 sprintf(buffer, "select * from wiki where title = '%s'", node.title);
-                if (CheckExistance(db, buffer)) {
+                PGresult* titlequery;
+                if (CheckExistance(db, buffer, titlequery)) {
                     sprintf(buffer, "UPDATE wiki SET path = '%s' WHERE title = '%s'", node.path, node.title);
                     PQexec(db, buffer);
-                    UpdateRow(db, node, err);
+                    if (node.time != atoi(PQgetvalue(titlequery, 0, PQfnumber(titlequery, "lastwrote"))) || force) 
+                        UpdateRow(db, node, err);
+                    PQclear(titlequery);
                     continue; 
                 }
             }
 
             if (node.inode != 0) {
                 sprintf(buffer, "select * from wiki where inode = %d", node.inode);
-                if (CheckExistance(db, buffer)) {
+                PGresult* inodequery;
+                if (CheckExistance(db, buffer, inodequery)) {
                     sprintf(buffer, "UPDATE wiki SET path = '%s' WHERE inode = %d", node.path, node.inode);
                     PQexec(db, buffer);
-                    UpdateRow(db, node, err);
+                    if (node.time != atoi(PQgetvalue(inodequery, 0, PQfnumber(inodequery, "lastwrote"))) || force) 
+                        UpdateRow(db, node, err);
+                    PQclear(inodequery);
                     continue;
                 }
             }

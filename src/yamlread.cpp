@@ -90,3 +90,47 @@ yaml_s collectyaml(char* filepath)
     fclose(file);
     return yaml;
 }
+
+int readlines(char* buffer, int bufferlen, char* &yaml)
+{
+    int stringend = 0;
+    for (int i = 0; i<strlen(yaml); i++)
+    {
+        if (yaml[i] == '\n' || yaml[i+1] == '\0') {
+            stringend = i;
+            break;
+        }
+    }
+    if (stringend == 0)
+        return 1;
+    strncpy(buffer, yaml, stringend+1);
+    buffer[stringend+1] = '\0';
+    yaml = &yaml[stringend+1];
+    return 0;
+}
+
+yaml_s collectyamlstring(char* yamlstring)
+{
+    yaml_s yaml {};
+    char buffer[200] = {0};
+    if (strcmp(yamlstring, "") == 0) {
+        yaml.yamlstatus = YAML_EMPTY;
+        return yaml;
+    }
+    int i = 0;
+    while (readlines(buffer, 200, yamlstring) != 1) {
+        yaml.alloc_if_needed();
+        if (yaml.headers[yaml.nheaders].type == 0) {
+            new (&yaml.headers[yaml.nheaders]) header_s();
+        }
+        if (strcmp(buffer, "---\n") == 0) {
+            break;
+        } 
+        matchheader(buffer, yaml);
+        if (yaml.yamlstatus == YAML_FAILURE)
+            break;
+        yaml.nheaders++;
+    }
+    std::cout << "seila" << std::endl;
+    return yaml;
+}

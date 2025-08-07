@@ -118,5 +118,6 @@ struct yaml_s {
 };
 
 yaml_s collectyaml(char* filepath);
+yaml_s collectyamlstring(char* yamlstring);
 
 #endif

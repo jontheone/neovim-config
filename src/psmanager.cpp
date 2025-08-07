@@ -1,6 +1,8 @@
 #include "ErrorLogging.h"
 #include "update.h"
+#include "yamlread.h"
 #include <libpq-fe.h>
+#include <sys/stat.h>
 
 
 extern "C" {
@@ -71,34 +73,156 @@ extern "C" {
         return 1;
     }
 
+    // TODO: test function
     int Update(lua_State *L)
     {
         const char* wiki = luaL_checkstring(L, 1);
         switch(Update(wiki))
         {
             case S_SUCCESS:
+                lua_pushinteger(L, S_SUCCESS);
                 return 1;
                 break;
             case S_FAILURE:
+                lua_pushinteger(L, S_FAILURE);
                 return 1;
                 break;
             case S_WARNINGS:
+                lua_pushinteger(L, S_WARNINGS);
                 return 1;
                 break;
             default:
+                lua_pushinteger(L, S_FAILURE);
                 return 1;
                 break;
         }
     }
 
+    // TODO: test function
+    int UpdateForce(lua_State *L)
+    {
+        const char* wiki = luaL_checkstring(L, 1);
+        switch(Update(wiki, true))
+        {
+            case S_SUCCESS:
+                lua_pushinteger(L, S_SUCCESS);
+                return 1;
+                break;
+            case S_FAILURE:
+                lua_pushinteger(L, S_FAILURE);
+                return 1;
+                break;
+            case S_WARNINGS:
+                lua_pushinteger(L, S_WARNINGS);
+                return 1;
+                break;
+            default:
+                lua_pushinteger(L, S_FAILURE);
+                return 1;
+                break;
+        }
+    }
+
+    // TODO: test function
+    int UpdateFileNoWrite(lua_State *L)
+    {
+        PGconn* db = PQconnectdb("dbname=wiki");
+        const char* arg1 = luaL_checkstring(L, 1);
+        const char* arg2 = luaL_checkstring(L, 2);
+        char* yaml = (char*)calloc(strlen(arg2), sizeof(char));
+        char* path = (char*)calloc(strlen(arg1), sizeof(char));
+        char buffer[300];
+        File node {path, yaml};
+        ErrorLogging err {};
+        if (node.yaml.yamlstatus != YAML_SUCCESS) {
+            yamlErrorMessage(err, node.yaml.yamlstatus, node.path);
+            print(L, err.message.str().c_str());
+        }
+        sprintf(buffer, "SELECT inode, lastwrote FROM wiki WHERE path = '%s'", node.path);
+        PGresult* selectres;
+        if (CheckExistance(db, buffer, selectres)) {
+            if (node.time != atoi(PQgetvalue(selectres, 0, PQfnumber(selectres, "lastwrote")))) 
+                UpdateRow(db, node, err);
+            PQclear(selectres);
+        } else {
+            PQclear(selectres);
+
+            if (node.title != NULL) {
+                sprintf(buffer, "select * from wiki where title = '%s'", node.title);
+                PGresult* titlequery;
+                if (CheckExistance(db, buffer, titlequery)) {
+                    sprintf(buffer, "UPDATE wiki SET path = '%s' WHERE title = '%s'", node.path, node.title);
+                    PQexec(db, buffer);
+                    if (node.time != atoi(PQgetvalue(titlequery, 0, PQfnumber(titlequery, "lastwrote")))) 
+                        UpdateRow(db, node, err);
+                    PQclear(titlequery);
+                    lua_pushinteger(L, err.returnstatus);
+                    return 1;
+                }
+            }
+
+            if (node.inode != 0) {
+                sprintf(buffer, "select * from wiki where inode = %d", node.inode);
+                PGresult* inodequery;
+                if (CheckExistance(db, buffer, inodequery)) {
+                    sprintf(buffer, "UPDATE wiki SET path = '%s' WHERE inode = %d", node.path, node.inode);
+                    PQexec(db, buffer);
+                    if (node.time != atoi(PQgetvalue(inodequery, 0, PQfnumber(inodequery, "lastwrote")))) 
+                        UpdateRow(db, node, err);
+                    PQclear(inodequery);
+                    lua_pushinteger(L, err.returnstatus);
+                    return 1;
+                }
+            }
+
+            InsertRow(db, node, err);
+        }
+        free(yaml);
+        free(path);
+        lua_pushinteger(L, err.returnstatus);
+        return 1;
+    }
+
+
+    // TODO: test function
+    int UpdateInodeAndTime(lua_State *L) {
+        const char *path = luaL_checkstring(L, 1);
+        PGconn* db = PQconnectdb("dbname=wiki");
+        struct stat file_stat;
+        char buffer[300];
+        if (stat(path, &file_stat) == 0) {
+            sprintf(buffer, "UPDATE wiki SET lastwrote = %d, inode = %d WHERE path = '%s'", (int)file_stat.st_mtime, (int)file_stat.st_ino, path);
+            PGresult *res = PQexec(db, buffer);
+            if (PQresultStatus(res) != PGRES_COMMAND_OK) {
+                print(L, PQresultErrorMessage(res));
+                lua_pushinteger(L, S_FAILURE);
+                return 1;
+            } 
+        } else {
+            sprintf(buffer, "Could not stat the file: %s", path);
+            print(L, buffer);
+            lua_pushinteger(L, S_FAILURE);
+            return 1;
+        }
+        lua_pushinteger(L, S_SUCCESS);
+        return 1;
+    }
+
+    // TODO: as duas funções abaixo
+    int Querydb(lua_State *L);
+    int QueryExpressionOnly(lua_State *L);
+
     int luaopen_lib_psmanager(lua_State *L)
     {
         luaL_reg functions[] {
             {"CheckDatabase", CheckDatabase},
+            {"Update", Update},
+            {"UpdateForce", UpdateForce},
+            {"UpdateNoWrite", UpdateFileNoWrite},
+            {"UpdateInodeTime", UpdateInodeAndTime},
             {NULL, NULL}
         };
         luaL_register(L, "psmanager", functions);
         return 1;
     }
-    
 }
