@@ -14,3 +14,12 @@ vim.api.nvim_create_autocmd("FileType", {
         end, { buffer = vim.api.nvim_get_current_buf() })
     end
 })
+
+vim.api.nvim_create_autocmd("FileType", {
+  pattern = "qf",
+  callback = function()
+      vim.wo[vim.api.nvim_get_current_win()].relativenumber = false
+--    if vim.fn.getwininfo(vim.api.nvim_get_current_win())[1].loclist == 0 then
+--    end
+  end,
+})

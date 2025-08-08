@@ -17,11 +17,12 @@ return {
                 end
             end
         end)
+        vim.api.nvim_create_user_command("GG", function(opts) hp:list():select(tonumber(opts.args)) end, {nargs = "?"})
         set("n", "<leader>ga", function() hp:list():select(1) end)
         set("n", "<leader>gs", function() hp:list():select(2) end)
         set("n", "<leader>gd", function() hp:list():select(3) end)
         set("n", "<leader>gf", function() hp:list():select(4) end)
         set("n", "<C-h>", function() hp:list():prev() end)
         set("n", "<C-l>", function() hp:list():next() end)
-    end 
+    end
 }

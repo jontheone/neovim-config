@@ -64,7 +64,7 @@ extern "C" {
                 } else 
                     print(L, "Action interrupted by user");
             }
-        } else {
+        } else if (PQresultStatus(res) == PGRES_FATAL_ERROR) {
             print(L, PQresultErrorMessage(res));
             err.returnstatus = S_FAILURE;
         }
