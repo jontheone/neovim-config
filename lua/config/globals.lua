@@ -1,4 +1,4 @@
-vim.g.wiki_root = "~/Documents/wikis/wiki"
+vim.g.wiki_root = "/home/jonputer/Documents/wikis/wiki"
 vim.opt.tabstop = 4
 vim.opt.shiftwidth = 4
 vim.opt.expandtab = true

@@ -73,7 +73,6 @@ extern "C" {
         return 1;
     }
 
-    // TODO: test function
     int Update(lua_State *L)
     {
         const char* wiki = luaL_checkstring(L, 1);
@@ -98,7 +97,6 @@ extern "C" {
         }
     }
 
-    // TODO: test function
     int UpdateForce(lua_State *L)
     {
         const char* wiki = luaL_checkstring(L, 1);
@@ -129,20 +127,26 @@ extern "C" {
         PGconn* db = PQconnectdb("dbname=wiki");
         const char* arg1 = luaL_checkstring(L, 1);
         const char* arg2 = luaL_checkstring(L, 2);
-        char* yaml = (char*)calloc(strlen(arg2), sizeof(char));
-        char* path = (char*)calloc(strlen(arg1), sizeof(char));
+        char* path = (char*)calloc(strlen(arg1)+1, sizeof(char));
+        char* yaml = (char*)calloc(strlen(arg2)+1, sizeof(char));
+        strcpy(path, arg1);
+        strcpy(yaml, arg2);
         char buffer[300];
         File node {path, yaml};
         ErrorLogging err {};
         if (node.yaml.yamlstatus != YAML_SUCCESS) {
             yamlErrorMessage(err, node.yaml.yamlstatus, node.path);
             print(L, err.message.str().c_str());
+            free(yaml);
+            free(path);
+            lua_pushinteger(L, err.returnstatus);
+            return 1;
         }
         sprintf(buffer, "SELECT inode, lastwrote FROM wiki WHERE path = '%s'", node.path);
         PGresult* selectres;
         if (CheckExistance(db, buffer, selectres)) {
-            if (node.time != atoi(PQgetvalue(selectres, 0, PQfnumber(selectres, "lastwrote")))) 
-                UpdateRow(db, node, err);
+            print(L, "reached");
+            UpdateRow(db, node, err);
             PQclear(selectres);
         } else {
             PQclear(selectres);
@@ -153,10 +157,11 @@ extern "C" {
                 if (CheckExistance(db, buffer, titlequery)) {
                     sprintf(buffer, "UPDATE wiki SET path = '%s' WHERE title = '%s'", node.path, node.title);
                     PQexec(db, buffer);
-                    if (node.time != atoi(PQgetvalue(titlequery, 0, PQfnumber(titlequery, "lastwrote")))) 
-                        UpdateRow(db, node, err);
+                    UpdateRow(db, node, err);
                     PQclear(titlequery);
                     lua_pushinteger(L, err.returnstatus);
+                    free(yaml);
+                    free(path);
                     return 1;
                 }
             }
@@ -167,10 +172,11 @@ extern "C" {
                 if (CheckExistance(db, buffer, inodequery)) {
                     sprintf(buffer, "UPDATE wiki SET path = '%s' WHERE inode = %d", node.path, node.inode);
                     PQexec(db, buffer);
-                    if (node.time != atoi(PQgetvalue(inodequery, 0, PQfnumber(inodequery, "lastwrote")))) 
-                        UpdateRow(db, node, err);
+                    UpdateRow(db, node, err);
                     PQclear(inodequery);
                     lua_pushinteger(L, err.returnstatus);
+                    free(yaml);
+                    free(path);
                     return 1;
                 }
             }
@@ -184,7 +190,6 @@ extern "C" {
     }
 
 
-    // TODO: test function
     int UpdateInodeAndTime(lua_State *L) {
         const char *path = luaL_checkstring(L, 1);
         PGconn* db = PQconnectdb("dbname=wiki");

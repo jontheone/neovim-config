@@ -1,42 +1,44 @@
 local M = {}
 
 
-local state = {
-    term = {
-        win = -1,
-        buf = -1
-    }
-}
+local buffer = -1
+local win = -1
 
-M.createwindow = function(buffer)
-    local buf = buffer or vim.api.nvim_create_buf(false, true)
-    local height = math.floor(vim.o.lines * 0.3)
-    local width = math.floor(vim.o.columns * 0.97)
-    local col = math.floor(vim.o.columns * 0.5) - math.floor(width / 2)
-    local row = math.floor(vim.o.lines * 0.65)
-    local opts = {
-        relative = "editor",
-        col = col,
-        row = row,
-        height = height,
-        width = width,
-        style = "minimal",
-        border = "rounded"
-    }
-    local win = vim.api.nvim_open_win(buf, true, opts)
-    return { win = win, buf = buf }
+M.CreateSplit = function()
+    local before = vim.api.nvim_list_wins()
+    vim.cmd("split")
+    local after = vim.api.nvim_list_wins()
+    local new_win
+    local seen = {}
+    for _, win in ipairs(before) do
+        seen[win] = true
+    end
+    for _, win in ipairs(after) do
+        if not seen[win] then
+            new_win = win
+            break
+        end
+    end
+
+    return new_win
 end
 
-M.floaterminal = function()
-    if vim.api.nvim_win_is_valid(state.term.win) then
-        vim.api.nvim_win_close(state.term.win, true)
-    else
-        if vim.api.nvim_buf_is_valid(state.term.buf) then
-            state.term = M.createwindow(state.term.buf)
+M.EnterTerm = function()
+    if not vim.api.nvim_win_is_valid(win) then
+        if not vim.api.nvim_buf_is_valid(win) then
+            win = M.CreateSplit()
+            vim.api.nvim_win_set_height(win, math.floor(vim.o.lines * 0.15))
+            vim.api.nvim_set_current_win(win)
+            vim.cmd("term")
+            buffer = vim.api.nvim_create_buf(false, true)
+            vim.api.nvim_win_set_buffer(buffer)
         else
-            state.term = M.createwindow()
-            vim.cmd.term()
+            win = M.CreateSplit()
+            vim.api.nvim_set_current_win(win)
+            vim.api.nvim_win_set_buffer(buffer)
         end
+    else
+        vim.api.nvim_win_close(win, false)
     end
 end
 

@@ -61,7 +61,7 @@ void LogErr(ErrorLogging &err, const char* action)
     message << std::setw(35) <<"Error:" << err.message.str() << "\n";
     message << "==================================================================\n";
     fputs(message.str().c_str(), err.errlogs);
-    message.clear();
+    err.message.clear();
     err.returnstatus = S_WARNINGS;
 }
 
@@ -79,6 +79,6 @@ void LogErr(ErrorLogging &err, const char* action, int status)
     message << std::setw(30) <<"Error:" << err.message.str() << "\n";
     message << "==================================================================\n";
     fputs(message.str().c_str(), err.errlogs);
-    message.clear();
+    err.message.clear();
     err.returnstatus = status;
 }

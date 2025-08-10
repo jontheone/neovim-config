@@ -92,7 +92,6 @@ void RemoveSpaces(char* str)
 
 void UpdateRow(PGconn* db, File &file, ErrorLogging &err)
 {
-    std::cout << "seila" << std::endl;
     if (!NullifyRow(db, file, err)) {
         err.message << "Could not nullify the row with file: " << file.path << "\n";
         char message[] = "Tried nullifying the row";
@@ -149,7 +148,10 @@ void UpdateRow(PGconn* db, File &file, ErrorLogging &err)
 void InsertRow(PGconn* db, File &file, ErrorLogging &err)
 {
     char buffer[300];
-    sprintf(buffer, "INSERT INTO wiki (inode, path, title, lastwrote) VALUES (%d, '%s', '%s', %d)", file.inode, file.path, file.title, file.time);
+    if (file.title == NULL)
+        sprintf(buffer, "INSERT INTO wiki (inode, path, lastwrote) VALUES (%d, '%s', %d)", file.inode, file.path, file.time);
+    else
+        sprintf(buffer, "INSERT INTO wiki (inode, path, title, lastwrote) VALUES (%d, '%s', '%s', %d)", file.inode, file.path, file.title, file.time);
     PGresult* res = PQexec(db, buffer);
     switch(PQresultStatus(res))
     {
@@ -181,7 +183,6 @@ int Update(const char* wiki, bool force)
     char buffer[300];
     while (fgets(filebuffer, 161, output) != NULL) {
         filebuffer[strlen(filebuffer)-1] = filebuffer[strlen(filebuffer)];
-        std::cout << filebuffer << std::endl;
         File node {filebuffer};
         if (node.yaml.yamlstatus != YAML_SUCCESS) {
             yamlErrorMessage(err, node.yaml.yamlstatus, filebuffer);

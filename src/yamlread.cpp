@@ -131,6 +131,5 @@ yaml_s collectyamlstring(char* yamlstring)
             break;
         yaml.nheaders++;
     }
-    std::cout << "seila" << std::endl;
     return yaml;
 }

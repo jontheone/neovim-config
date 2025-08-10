@@ -5,7 +5,8 @@
 --    end
 --})
 --
-
+local ps = require("lib.psmanager")
+local data = require("static.datacollection")
 vim.api.nvim_create_autocmd("FileType", {
     pattern = "netrw",
     callback = function()
@@ -14,6 +15,35 @@ vim.api.nvim_create_autocmd("FileType", {
         end, { buffer = vim.api.nvim_get_current_buf() })
     end
 })
+
+vim.api.nvim_create_autocmd("BufWritePre", {
+    pattern = "*.md",
+    callback = function()
+        local file = vim.fn.expand("%:p")
+        print(file)
+        if file:match("wiki") then
+            local ret = ps.UpdateNoWrite(file, data.GetYaml(file))
+            if ret == 0 then
+                print("Updated file successfully")
+            elseif ret == 1 then
+                print("Updated successfully with warnings, read ~/.local/share/nvim/postgreslogs")
+            elseif ret == -1 then
+                print("Failed updating the file, read ~/.local/share/nvim/postgreslogs")
+            end
+        end
+    end
+})
+
+vim.api.nvim_create_autocmd("BufWritePost", {
+    pattern = "*.md",
+    callback = function()
+        local file = vim.fn.expand("%:p")
+        if file:match("wiki") then
+            ps.UpdateInodeTime(file)
+        end
+    end
+})
+
 
 vim.api.nvim_create_autocmd("FileType", {
   pattern = "qf",
