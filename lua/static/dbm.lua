@@ -49,7 +49,9 @@ end
 M.Querydb = function(query)
     assert(type(query) == "string", "Could not process the query, its type is not string")
     local res = db.Querydb(query);
-    print(vim.inspect(res));
+    if type(res) == "table" then
+        print(vim.inspect(res))
+    end
 end
 
 ---@param expr string

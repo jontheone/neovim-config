@@ -219,17 +219,32 @@ extern "C" {
         return 1;
     }
 
-    // TODO: as duas funções abaixo
     int Querydb(lua_State *L) 
     {
         const char* query = luaL_checkstring(L, 1);
         PGconn* db = PQconnectdb("dbname=wiki");
         PGresult* res = PQexec(db, query);
-        if (PQresultStatus(res) != PGRES_TUPLES_OK) {
+        if (PQresultStatus(res) == PGRES_COMMAND_OK) {
+            print(L, "Command Executed successfully");
+            lua_pushinteger(L, S_SUCCESS);
+            PQclear(res);
+            PQfinish(db);
+            return 1;
+        } else if (PQresultStatus(res) != PGRES_TUPLES_OK) {
             print(L, PQresultErrorMessage(res));
             lua_pushinteger(L, S_FAILURE);
+            PQclear(res);
+            PQfinish(db);
             return 1;
         }
+        lua_newtable(L);
+        lua_pushstring(L, "tuples");
+        lua_pushinteger(L, PQntuples(res));
+        lua_settable(L, -3);
+        lua_pushstring(L, "fields");
+        lua_pushinteger(L, PQnfields(res));
+        lua_settable(L, -3);
+        lua_pushstring(L, "results");
         lua_newtable(L);
         for (int i = 0; i < PQnfields(res); i++) {
             const char* field = PQfname(res, i);
@@ -241,6 +256,7 @@ extern "C" {
             }
             lua_setfield(L, -2, field);
         }
+        lua_settable(L, -3);
         PQclear(res);
         PQfinish(db);
         return 1;

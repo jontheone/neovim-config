@@ -9,6 +9,7 @@ vim.api.nvim_create_user_command("UpdateWiki", function() dbm.Update() end, { de
 vim.api.nvim_create_user_command("UpdateWikiForce", function() dbm.Update(true) end, { desc = "Run a full update on all the wiki files"})
 vim.api.nvim_create_user_command("Sync", function() dbm.sync() end, { desc = "Complete sync of the database, run in case of new pc or change in locations"})
 vim.api.nvim_create_user_command("Expr", function(opts) dbm.QueryExpr(opts.args)  end, { desc = "Pass a sql expression to filter the paths", nargs="?"})
+vim.api.nvim_create_user_command("Quer", function(opts) dbm.Querydb(opts.args)  end, { desc = "Pass a sql query and the system executes it", nargs="?"})
 
 -- keymaps
 vim.keymap.set("n", "<CR>", function() fmd.followMdLinks() end)
