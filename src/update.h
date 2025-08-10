@@ -2,6 +2,7 @@
 #define UPDATE_H
 #include <sys/stat.h>
 #include <libpq-fe.h>
+#include <cstring>
 #include "ErrorLogging.h"
 #include "yamlread.h"
 
@@ -12,7 +13,10 @@ struct File {
     char* title {NULL};
     yaml_s yaml;
 
-    File(char* file) : path{file}, yaml{collectyaml(file)} {
+    File(char* file, const char* wiki) : path{file}, yaml{collectyaml(file)} {
+        if (memcmp(file, wiki, strlen(wiki)) == 0) {
+            path = &file[strlen(wiki)+1];
+        }
         struct stat file_stat;
         int ret = stat(file, &file_stat);
         if (ret == 0) {

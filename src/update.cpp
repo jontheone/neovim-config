@@ -183,7 +183,7 @@ int Update(const char* wiki, bool force)
     char buffer[300];
     while (fgets(filebuffer, 161, output) != NULL) {
         filebuffer[strlen(filebuffer)-1] = filebuffer[strlen(filebuffer)];
-        File node {filebuffer};
+        File node {filebuffer, wiki};
         if (node.yaml.yamlstatus != YAML_SUCCESS) {
             yamlErrorMessage(err, node.yaml.yamlstatus, filebuffer);
             char message[] = "Error while collecting the yaml";

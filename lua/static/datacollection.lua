@@ -1,7 +1,6 @@
 -- this file exists strictly to provide me with a way to collect data from my wiki of md files
 
 local cmd  = [[rg -. -P -l -g"*.md" ]]
-vim.g.wiki_root = "~/Documents/wikis/wiki"
 
 local M = {}
 
@@ -193,6 +192,25 @@ M.GetYaml = function(filepath)
     return yaml
 end
 
+M.GetYamlNW = function(buffer)
+    local lines = vim.api.nvim_buf_get_lines(buffer, 0, -1, false)
+    local insideYaml = false
+    local yaml = ""
+    for i, line in ipairs(lines) do
+        if line:match("%s*%-%-%-%s*") then
+            insideYaml = not (insideYaml)
+            goto skip
+        end
+        if (not insideYaml) and (i >= 5) then
+            break
+        end
+        if insideYaml then
+            yaml = yaml..line.."\n"
+        end
+        ::skip::
+    end
+    return yaml
+end
 
 M.TableIn = function(tbl1, tbl2)
     if #tbl1 > #tbl2 then

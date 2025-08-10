@@ -1,4 +1,5 @@
 local db = require("lib.psmanager")
+local pick = require("static.pickers")
 
 local M = {}
 
@@ -31,6 +32,40 @@ M.Update = function(force)
         print("database in order, but with warnings, check ~/.local/share/nvim/postgreslogs")
     end
 end
+
+M.sync = function()
+    local ret = M.CheckDatabase()
+    if not ret > -1 then
+        return
+    end
+    ret = M.Update()
+    if not ret > -1 then
+        return
+    end
+    print("Runned check and update and everything seems fine")
+end
+
+---@param query string
+M.Querydb = function(query)
+    assert(type(query) == "string", "Could not process the query, its type is not string")
+    local res = db.Querydb(query);
+    print(vim.inspect(res));
+end
+
+---@param expr string
+M.QueryExpr = function(expr)
+    local res = db.Expr(expr)
+    local entries = {}
+    for _, item in ipairs(res) do
+        local tbl = {}
+        tbl.path = vim.fs.joinpath(vim.g.wiki_root, item)
+        tbl.ordinal = item
+        tbl.display = item
+        table.insert(entries, tbl)
+    end
+    pick.FilePicker(entries)
+end
+
 
 --M.Update()
 

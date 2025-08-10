@@ -20,9 +20,11 @@ vim.api.nvim_create_autocmd("BufWritePre", {
     pattern = "*.md",
     callback = function()
         local file = vim.fn.expand("%:p")
-        print(file)
-        if file:match("wiki") then
-            local ret = ps.UpdateNoWrite(file, data.GetYaml(file))
+        local buffer = vim.api.nvim_get_current_buf()
+        local _, ending = file:find(vim.g.wiki_root)
+        file = file:sub(ending+2)
+        if file then
+            local ret = ps.UpdateNoWrite(file, data.GetYamlNW(buffer))
             if ret == 0 then
                 print("Updated file successfully")
             elseif ret == 1 then

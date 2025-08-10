@@ -140,12 +140,12 @@ extern "C" {
             free(yaml);
             free(path);
             lua_pushinteger(L, err.returnstatus);
+            PQfinish(db);
             return 1;
         }
         sprintf(buffer, "SELECT inode, lastwrote FROM wiki WHERE path = '%s'", node.path);
         PGresult* selectres;
         if (CheckExistance(db, buffer, selectres)) {
-            print(L, "reached");
             UpdateRow(db, node, err);
             PQclear(selectres);
         } else {
@@ -162,6 +162,7 @@ extern "C" {
                     lua_pushinteger(L, err.returnstatus);
                     free(yaml);
                     free(path);
+                    PQfinish(db);
                     return 1;
                 }
             }
@@ -177,6 +178,7 @@ extern "C" {
                     lua_pushinteger(L, err.returnstatus);
                     free(yaml);
                     free(path);
+                    PQfinish(db);
                     return 1;
                 }
             }
@@ -185,6 +187,7 @@ extern "C" {
         }
         free(yaml);
         free(path);
+        PQfinish(db);
         lua_pushinteger(L, err.returnstatus);
         return 1;
     }
@@ -201,21 +204,71 @@ extern "C" {
             if (PQresultStatus(res) != PGRES_COMMAND_OK) {
                 print(L, PQresultErrorMessage(res));
                 lua_pushinteger(L, S_FAILURE);
+                PQfinish(db);
                 return 1;
             } 
         } else {
             sprintf(buffer, "Could not stat the file: %s", path);
             print(L, buffer);
+            PQfinish(db);
             lua_pushinteger(L, S_FAILURE);
             return 1;
         }
         lua_pushinteger(L, S_SUCCESS);
+        PQfinish(db);
         return 1;
     }
 
     // TODO: as duas funções abaixo
-    int Querydb(lua_State *L);
-    int QueryExpressionOnly(lua_State *L);
+    int Querydb(lua_State *L) 
+    {
+        const char* query = luaL_checkstring(L, 1);
+        PGconn* db = PQconnectdb("dbname=wiki");
+        PGresult* res = PQexec(db, query);
+        if (PQresultStatus(res) != PGRES_TUPLES_OK) {
+            print(L, PQresultErrorMessage(res));
+            lua_pushinteger(L, S_FAILURE);
+            return 1;
+        }
+        lua_newtable(L);
+        for (int i = 0; i < PQnfields(res); i++) {
+            const char* field = PQfname(res, i);
+            lua_newtable(L);
+            for (int j = 0; j < PQntuples(res); j++) {
+                const char* value = PQgetvalue(res, j, i);
+                lua_pushstring(L, value);
+                lua_rawseti(L, -2, j+1);
+            }
+            lua_setfield(L, -2, field);
+        }
+        PQclear(res);
+        PQfinish(db);
+        return 1;
+    }
+
+    int QueryExpressionOnly(lua_State *L) 
+    {
+        const char* expr = luaL_checkstring(L, 1);
+        PGconn* db = PQconnectdb("dbname=wiki");
+        char query[200] = {0};
+        sprintf(query, "SELECT path FROM wiki WHERE %s", expr);
+        PGresult* res = PQexec(db, query);
+        if (PQresultStatus(res) != PGRES_TUPLES_OK) {
+            print(L, PQresultErrorMessage(res));
+            lua_pushinteger(L, S_FAILURE);
+            return 1;
+        }
+        lua_newtable(L);
+        for (int i = 0; i < PQntuples(res); i++) {
+            const char* value = PQgetvalue(res, i, 0);
+            lua_pushinteger(L, i+1);
+            lua_pushstring(L, value);
+            lua_settable(L, -3);
+        }
+        PQclear(res);
+        PQfinish(db);
+        return 1;
+    }
 
     int luaopen_lib_psmanager(lua_State *L)
     {
@@ -225,6 +278,8 @@ extern "C" {
             {"UpdateForce", UpdateForce},
             {"UpdateNoWrite", UpdateFileNoWrite},
             {"UpdateInodeTime", UpdateInodeAndTime},
+            {"Expr", QueryExpressionOnly},
+            {"Querydb", Querydb},
             {NULL, NULL}
         };
         luaL_register(L, "psmanager", functions);
