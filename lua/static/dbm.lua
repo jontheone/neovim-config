@@ -50,7 +50,7 @@ M.Querydb = function(query)
     assert(type(query) == "string", "Could not process the query, its type is not string")
     local res = db.Querydb(query);
     if type(res) == "table" then
-        print(vim.inspect(res))
+        return res
     end
 end
 
@@ -68,6 +68,19 @@ M.QueryExpr = function(expr)
     pick.FilePicker(entries)
 end
 
+M.ShowData = function(data, expr)
+    local ret
+    if expr then
+        ret = M.Querydb(string.format("select distinct %s from wiki where %s", data, expr))
+    else
+        ret = M.Querydb(string.format("select distinct %s from wiki", data))
+    end
+    if not ret then
+        print("No fields where found")
+        return
+    end
+    pick.NormalPicker(ret.results[data])
+end
 
 --M.Update()
 

@@ -10,6 +10,16 @@ vim.api.nvim_create_user_command("UpdateWikiForce", function() dbm.Update(true) 
 vim.api.nvim_create_user_command("Sync", function() dbm.sync() end, { desc = "Complete sync of the database, run in case of new pc or change in locations"})
 vim.api.nvim_create_user_command("Expr", function(opts) dbm.QueryExpr(opts.args)  end, { desc = "Pass a sql expression to filter the paths", nargs="?"})
 vim.api.nvim_create_user_command("Quer", function(opts) dbm.Querydb(opts.args)  end, { desc = "Pass a sql query and the system executes it", nargs="?"})
+vim.api.nvim_create_user_command("Fields", function(opts)
+    local _,i = opts.args:find("%s")
+    local expr
+    local data = opts.args
+    if i then
+        expr = opts.args:sub(i+1)
+        data = opts.args:sub(0, i-1)
+    end
+    dbm.ShowData(data, expr)
+end, { desc = "Pass a sql query and the system executes it", nargs="?"})
 
 -- keymaps
 vim.keymap.set("n", "<CR>", function() fmd.followMdLinks() end)
