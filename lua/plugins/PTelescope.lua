@@ -1,8 +1,10 @@
 return {
     "nvim-telescope/telescope.nvim",
-    dependencies = { "nvim-lua/plenary.nvim"},
+    dependencies = { "nvim-lua/plenary.nvim", "nvim-tree/nvim-web-devicons"},
     config = function()
         local tl = require"telescope.builtin"
+        local action = require("telescope.actions")
+        local action_state = require("telescope.actions.state")
         require("telescope").setup{
             defaults = {
                 mappings = {
@@ -10,6 +12,14 @@ return {
                         ["<C-j>"] = "move_selection_next",
                         ["<C-k>"] = "move_selection_previous",
                         ["<C-x>"] = "delete_buffer",
+                        ["<C-g>"] = function(buf)
+                            local picker = action_state.get_current_picker(buf)
+                            local selection = picker:get_multi_selection()
+                            for _, item in ipairs(selection) do
+                                vim.cmd.argadd(item[1])
+                            end
+                            action.close(buf)
+                        end,
                     }
                 }
             }

@@ -1,6 +1,8 @@
 local fmd = require("static.FMD")
 local flt = require("static.floaterminal")
 local dbm = require("static.dbm")
+local finders = require("telescope.finders")
+local conf = require("telescope.config").values
 
 --commands
 
@@ -20,11 +22,25 @@ vim.api.nvim_create_user_command("Fields", function(opts)
     end
     dbm.ShowData(data, expr)
 end, { desc = "Pass a sql query and the system executes it", nargs="?"})
+vim.api.nvim_create_user_command("Arg", function()
+end, { desc="Summon the picker that manages the arglist" })
 
 -- keymaps
 vim.keymap.set("n", "<CR>", function() fmd.followMdLinks() end)
 vim.keymap.set("n", "<leader>t", function() flt.floaterminal() end)
---vim.keymap.set("n", "<leader>md", function() meta.FileSearcher.main() end)
+vim.keymap.set("n","<leader>j", function()
+    local count = vim.v.count > 0 and vim.v.count or 1
+    local ret, _ = pcall(vim.cmd.argument, count)
+    if not ret then
+        print("Not a valid index")
+    end
+    print(string.format("[%s]", vim.fn.expand("%")))
+end, { desc = "change to the file in the arglist" })
+vim.keymap.set("n","<leader>ga", function() vim.cmd.argadd(vim.fn.expand("%")) end, { desc = "Add the current file to the arglist" })
+vim.keymap.set("n","<leader>gr", function() vim.cmd.argdel(vim.fn.expand("%")) end, { desc = "Remove the current file from the arglist" })
+vim.keymap.set("n","<C-l>", function() pcall(vim.cmd.next) end, { desc = "Move left in the arglist(towards the end)" })
+vim.keymap.set("n","<C-h>", function() pcall(vim.cmd.prev) end, { desc = "Move right in the arglist(towards the begining)" })
+vim.keymap.set("n","<leader>b", function() vim.cmd("args") end, { desc = "Show args list" })
 
 
 -- other modules
