@@ -8,7 +8,7 @@ return {
         "nvim-neotest/nvim-nio",
         "mfussenegger/nvim-dap"
     },
-    config = function()
+    config = function(_, opts)
         local dap = require("dap")
         local dapui = require("dapui")
         local lsp = require("lspconfig")
@@ -19,6 +19,7 @@ return {
             }
         })
         require("mason-lspconfig").setup({
+            automatic_enable = false,
             ensure_installed = {
                 "pyright",
                 "clangd",
@@ -30,6 +31,17 @@ return {
                 "texlab"
             }
         })
+
+        local capabilities = require('blink.cmp').get_lsp_capabilities()
+        lsp["pyright"].setup({capabilities = capabilities})
+        lsp["clangd"].setup({capabilities = capabilities})
+        lsp["cssls"].setup({capabilities = capabilities})
+        lsp["jsonls"].setup({capabilities = capabilities})
+        lsp["lua_ls"].setup({capabilities = capabilities})
+        lsp["biome"].setup({capabilities = capabilities})
+        lsp["texlab"].setup({capabilities = capabilities})
+
+
         vim.diagnostic.config({virtual_text = true})
 
         dapui.setup()

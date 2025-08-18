@@ -37,7 +37,7 @@ return {
         'projekt0n/github-nvim-theme',
         name = 'github-theme',
         config = function()
-            --vim.cmd('colorscheme github_dark_dimmed')
+            --vim.cmd('colorscheme github_dark_tritanopia')
         end,
     },
     {
@@ -86,5 +86,5 @@ return {
 --            vim.api.nvim_set_hl(0, "TelescopePreviewBorder", { bg = "none" })
 --            vim.api.nvim_set_hl(0, "TelescopeResultsBorder", { bg = "none" })
         end
-    }
+    },
 }

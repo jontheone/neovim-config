@@ -3,6 +3,9 @@ local flt = require("static.floaterminal")
 local dbm = require("static.dbm")
 local finders = require("telescope.finders")
 local conf = require("telescope.config").values
+local pickers = require("telescope.pickers")
+local actions = require("telescope.actions")
+local action_state = require("telescope.actions.state")
 
 --commands
 
@@ -23,6 +26,20 @@ vim.api.nvim_create_user_command("Fields", function(opts)
     dbm.ShowData(data, expr)
 end, { desc = "Pass a sql query and the system executes it", nargs="?"})
 vim.api.nvim_create_user_command("Arg", function()
+    pickers.new({}, {
+        finder = finders.new_table(vim.fn.argv()),
+        sorter = conf.generic_sorter({}),
+        attach_mappings = function(buf,map)
+            map("i", "<C-x>", function()
+                vim.cmd.argdel(action_state.get_selected_entry()[1])
+            end)
+            map("n", "x", function()
+                vim.cmd.argdel(action_state.get_selected_entry()[1])
+            end)
+        return true
+        end,
+        initial_mode = "normal"
+    }):find()
 end, { desc="Summon the picker that manages the arglist" })
 
 -- keymaps

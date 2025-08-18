@@ -1,4 +1,6 @@
-vim.keymap.set("n", "<leader>d", ":Explore<CR>")
+if vim.g.loaded_netrw == 0 then
+    vim.keymap.set("n", "<leader>d", ":Explore<CR>")
+end
 vim.keymap.set("n", "0", "^")
 vim.keymap.set("n", ",", ";")
 vim.keymap.set("n", "<leader>l", "$")

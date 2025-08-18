@@ -12,7 +12,7 @@ return {
                         ["<C-j>"] = "move_selection_next",
                         ["<C-k>"] = "move_selection_previous",
                         ["<C-x>"] = "delete_buffer",
-                        ["<C-g>"] = function(buf)
+                        ["<C-f>"] = function(buf)
                             local picker = action_state.get_current_picker(buf)
                             local selection = picker:get_multi_selection()
                             for _, item in ipairs(selection) do
@@ -20,6 +20,17 @@ return {
                             end
                             action.close(buf)
                         end,
+                        ["<C-g>"] = function(buf)
+                            local picker = action_state.get_current_picker(buf)
+                            local results = {}
+                            for entry in picker.manager:iter() do
+                                table.insert(results, entry[1])
+                            end
+                            for _, item in ipairs(results) do
+                                vim.cmd.argadd(item)
+                            end
+                            action.close(buf)
+                        end
                     }
                 }
             }
