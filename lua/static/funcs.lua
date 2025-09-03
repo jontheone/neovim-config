@@ -1,5 +1,4 @@
 local fmd = require("static.FMD")
-local flt = require("static.floaterminal")
 local dbm = require("static.dbm")
 local finders = require("telescope.finders")
 local conf = require("telescope.config").values
@@ -44,7 +43,6 @@ end, { desc="Summon the picker that manages the arglist" })
 
 -- keymaps
 vim.keymap.set("n", "<CR>", function() fmd.followMdLinks() end)
-vim.keymap.set("n", "<leader>t", function() flt.floaterminal() end)
 vim.keymap.set("n","<leader>j", function()
     local count = vim.v.count > 0 and vim.v.count or 1
     local ret, _ = pcall(vim.cmd.argument, count)

@@ -22,7 +22,11 @@ vim.api.nvim_create_autocmd("BufWritePre", {
         local file = vim.fn.expand("%:p")
         local buffer = vim.api.nvim_get_current_buf()
         local _, ending = file:find(vim.g.wiki_root)
-        file = file:sub(ending+2)
+        if ending then
+            file = file:sub(ending+2)
+        else
+            return
+        end
         if file then
             local ret = ps.UpdateNoWrite(file, data.GetYamlNW(buffer))
             if ret == 0 then

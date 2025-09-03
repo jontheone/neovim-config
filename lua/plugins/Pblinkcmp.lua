@@ -13,7 +13,7 @@ return {
             -- ["<C-k>"] = { 'select_prev', 'fallback' },
         },
         appearance = { nerd_font_variant = 'mono' },
-        completion = { documentation = { auto_show = false }, menu = {ghost_text = { enabled = true } } },
+        completion = { documentation = { auto_show = false } },
         sources = { default = { 'lsp', 'path', 'snippets', 'buffer' }, }
     }
 }
