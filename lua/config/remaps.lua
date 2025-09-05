@@ -33,3 +33,20 @@ vim.keymap.set("i", "<C-f>", function()
     vim.cmd(string.format("<esc>F%sa", key))
 end)
 vim.keymap.set("i", "<C-d>", "<esc>;a")
+
+
+
+
+vim.keymap.set("n","<leader>j", function()
+    local count = vim.v.count > 0 and vim.v.count or 1
+    local ret, _ = pcall(vim.cmd.argument, count)
+    if not ret then
+        print("Not a valid index")
+    end
+    print(string.format("[%s]", vim.fn.expand("%")))
+end, { desc = "change to the file in the arglist" })
+vim.keymap.set("n","<leader>ga", function() vim.cmd.argadd(vim.fn.expand("%")) end, { desc = "Add the current file to the arglist" })
+vim.keymap.set("n","<leader>gr", function() vim.cmd.argdel(vim.fn.expand("%")) end, { desc = "Remove the current file from the arglist" })
+vim.keymap.set("n","<C-l>", function() pcall(vim.cmd.next) end, { desc = "Move left in the arglist(towards the end)" })
+vim.keymap.set("n","<C-h>", function() pcall(vim.cmd.prev) end, { desc = "Move right in the arglist(towards the begining)" })
+vim.keymap.set("n","<leader>b", function() vim.cmd("args") end, { desc = "Show args list" })

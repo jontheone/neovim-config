@@ -7,6 +7,7 @@ return {
         local action_state = require("telescope.actions.state")
         require("telescope").setup{
             defaults = {
+                layout_strategy = "vertical",
                 mappings = {
                     i = {
                         ["<C-j>"] = "move_selection_next",
