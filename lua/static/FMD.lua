@@ -23,7 +23,12 @@ local function getfulllink(text)
     end
 end
 
+
 M.followMdLinks = function()
+    local ok, _ = pcall(vim.treesitter.get_parser, 0)
+    if not ok then
+        return
+    end
     local node = ts.get_node_at_cursor()
     local ntype = node:type()
     local next_sibling = node:next_named_sibling()

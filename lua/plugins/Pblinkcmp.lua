@@ -7,8 +7,8 @@ return {
         enabled = function() return true end,
         keymap = {
             preset = 'default',
-            ["<C-l>"] = { 'snippet_forward', 'fallback' },
-            ["<C-h>"] = { 'snippet_backward', 'fallback' },
+            ["<right>"] = { 'snippet_forward', 'fallback' },
+            ["<left>"] = { 'snippet_backward', 'fallback' },
             -- ["<C-j>"] = { 'select_next', 'fallback' },
             -- ["<C-k>"] = { 'select_prev', 'fallback' },
         },
