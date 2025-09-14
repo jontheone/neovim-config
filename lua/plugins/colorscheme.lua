@@ -15,7 +15,7 @@ return {
                     }
                 }
             })
-            --vim.cmd("colorscheme rose-pine-main")
+            vim.cmd("colorscheme rose-pine-main")
         end
     },
     {
@@ -52,19 +52,19 @@ return {
     {
         "folke/tokyonight.nvim",
         config = function()
-            require("tokyonight").setup({
-                style = "storm",
-                transparent = false
-            })
-           vim.cmd("colorscheme tokyonight")
-           vim.api.nvim_set_hl(0, "TelescopeNormal", { bg = "none" })
-           vim.api.nvim_set_hl(0, "TelescopePreviewNormal", { bg = "none" })
-           vim.api.nvim_set_hl(0, "TelescopePromptNormal", { bg = "none" })
-           vim.api.nvim_set_hl(0, "TelescopeResultsNormal", { bg = "none" })
-           vim.api.nvim_set_hl(0, "TelescopeBorder", { bg = "none" })
-           vim.api.nvim_set_hl(0, "TelescopePromptBorder", { bg = "none" })
-           vim.api.nvim_set_hl(0, "TelescopePreviewBorder", { bg = "none" })
-           vim.api.nvim_set_hl(0, "TelescopeResultsBorder", { bg = "none" })
+           --  require("tokyonight").setup({
+           --      style = "storm",
+           --      transparent = false
+           --  })
+           -- vim.cmd("colorscheme tokyonight")
+           -- vim.api.nvim_set_hl(0, "TelescopeNormal", { bg = "none" })
+           -- vim.api.nvim_set_hl(0, "TelescopePreviewNormal", { bg = "none" })
+           -- vim.api.nvim_set_hl(0, "TelescopePromptNormal", { bg = "none" })
+           -- vim.api.nvim_set_hl(0, "TelescopeResultsNormal", { bg = "none" })
+           -- vim.api.nvim_set_hl(0, "TelescopeBorder", { bg = "none" })
+           -- vim.api.nvim_set_hl(0, "TelescopePromptBorder", { bg = "none" })
+           -- vim.api.nvim_set_hl(0, "TelescopePreviewBorder", { bg = "none" })
+           -- vim.api.nvim_set_hl(0, "TelescopeResultsBorder", { bg = "none" })
         end
     },
     {
