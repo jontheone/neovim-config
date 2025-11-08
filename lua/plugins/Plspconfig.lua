@@ -42,7 +42,7 @@ return {
         lsp["texlab"].setup({capabilities = capabilities})
 
 
-        vim.diagnostic.config({virtual_text = true})
+        vim.diagnostic.config({virtual_text = false, underline = false, signs = false, virtual_lines = false, update_in_insert = true})
 
         dapui.setup()
         dap.listeners.before.attach.dapui_config = function()

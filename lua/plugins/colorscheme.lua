@@ -15,7 +15,7 @@ return {
                     }
                 }
             })
-            vim.cmd("colorscheme rose-pine-main")
+            -- vim.cmd("colorscheme rose-pine-main")
         end
     },
     {
@@ -87,4 +87,22 @@ return {
 --            vim.api.nvim_set_hl(0, "TelescopeResultsBorder", { bg = "none" })
         end
     },
+    {
+        "slugbyte/lackluster.nvim",
+        lazy = false,
+        priority = 1000,
+        init = function()
+            -- vim.cmd.colorscheme("lackluster")
+            -- vim.cmd.colorscheme("lackluster-hack")
+            -- vim.cmd.colorscheme("lackluster-mint")
+        end,
+    },
+      {
+        "Alexis12119/nightly.nvim",
+        lazy = false,
+        priority = 1000,
+        config = function()
+          vim.cmd.colorscheme "nightly"
+        end,
+      }
 }

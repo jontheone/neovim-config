@@ -43,5 +43,6 @@ return {
         vim.keymap.set("n", "<leader>fc", function() tl.find_files({ cwd="~/.config/nvim" }) end)
         vim.keymap.set("n", "<leader>fb", function() tl.buffers() end)
         vim.keymap.set("n", "<leader>fq", function() tl.quickfix() end)
+        vim.keymap.set("n", "<leader>fw", function() tl.find_files({cwd = vim.g.wiki_root}) end)
     end
 }

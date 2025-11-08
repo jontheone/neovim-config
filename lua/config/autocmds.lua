@@ -59,3 +59,9 @@ vim.api.nvim_create_autocmd("FileType", {
 --    end
   end,
 })
+
+vim.api.nvim_create_autocmd("CursorMoved", {
+    callback = function()
+        vim.cmd("lua vim.diagnostic.config({virtual_lines = false, signs = false, virtual_text = false})")
+    end
+})
