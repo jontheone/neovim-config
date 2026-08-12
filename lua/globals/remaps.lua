@@ -1,4 +1,4 @@
--- leader key remap 
+-- leader key remap
 vim.g.mapleader = ";"
 vim.g.maplocalleader = ","
 -- commands remaps
@@ -14,8 +14,8 @@ vim.keymap.set('n', '<C-h>', ':vertical resize -10<CR>')
 vim.keymap.set('n', '<C-l>', ':vertical resize +10<CR>')
 vim.keymap.set('n', '<C-j>', ':resize -10<CR>')
 vim.keymap.set('n', '<C-k>', ':resize +10<CR>')
-vim.keymap.set('t', '<C-g>', '<c-\\><c-n>:NoiceDismiss<CR><C-w>w', {noremap = true})
-vim.keymap.set('i', '<C-H>', '<C-w>', {noremap = true})
+-- vim.keymap.set('t', '<C-g>', '<c-\\><c-n>:NoiceDismiss<CR><C-w>w', {noremap = true})
+vim.keymap.set('i', '<C-H>', '<C-w>', { noremap = true })
 vim.keymap.set('n', '<S-A-e>', ':tabe<CR>', { noremap = true })
 vim.keymap.set('n', '<S-A-b>', ':enew<CR>', { noremap = true })
 vim.keymap.set('n', '<A-k>', ':bn<CR>', { noremap = true })
@@ -30,4 +30,4 @@ vim.keymap.set('v', '<Leader>h', '^', { noremap = true })
 vim.keymap.set('n', '<Leader>i', '=%', { noremap = true })
 vim.keymap.set('v', '<C-c>', '"+y', { noremap = true, silent = true })
 vim.keymap.set('t', '<esc><esc>', "<c-\\><c-n>", {})
-vim.keymap.set('n', '<leader>d', ':Explore<CR>', { desc="bring netrw"})
+vim.keymap.set('n', '-', ':Explore<CR>', { desc = "bring netrw" })

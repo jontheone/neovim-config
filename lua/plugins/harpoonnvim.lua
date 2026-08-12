@@ -17,7 +17,7 @@ return {
                 end
             end
         end)
-        set("n", "<S-j>", function() hp:list():prev() end)
-        set("n", "<S-k>", function() hp:list():next() end)
+        -- set("n", "<S-j>", function() hp:list():prev() end)
+        -- set("n", "<S-k>", function() hp:list():next() end)
     end
 }
