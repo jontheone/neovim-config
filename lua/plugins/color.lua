@@ -39,7 +39,7 @@ return {
         lazy = false,
         priority = 1000,
         config = function()
-            --vim.cmd("colorscheme nord")
+            vim.cmd("colorscheme nord")
             vim.g.nord_contrast = true
             vim.g.nord_borders = false
             vim.g.nord_disable_background = false
@@ -52,12 +52,6 @@ return {
         'xiyaowong/transparent.nvim',
         config = function()
             --require("transparent").clear_prefix("lualine")
-        end
-    },
-    {
-        'nyoom-engineering/oxocarbon.nvim',
-        config = function()
-            --vim.cmd("colorscheme oxocarbon")
         end
     },
     {
@@ -78,16 +72,16 @@ return {
 	"rose-pine/neovim",
 	name = "rose-pine",
 	config = function()
-        require("rose-pine").setup({
-            palette = {
-                main = {
-                    base = '#000000',
-                    overlay = "#000000",
-                    surface = "#000000"
-                }
-            }
-        })
-		vim.cmd("colorscheme rose-pine-main")
+		--       require("rose-pine").setup({
+		--           palette = {
+		--               main = {
+		--                   base = '#000000',
+		--                   overlay = "#000000",
+		--                   surface = "#000000"
+		--               }
+		--           }
+		--       })
+		-- vim.cmd("colorscheme rose-pine-main")
 	end
     },
     {
