@@ -37,5 +37,7 @@ return {
         vim.keymap.set("n", "<Leader>fh", function() builtin.command_history() end, {desc="search for list of buffers"})
         vim.keymap.set("n", "<Leader>fl", function() builtin.current_buffer_fuzzy_find() end, {desc="fuzzy find lines"})
 
+        vim.api.nvim_create_user_command("Boiler", function() custom.BoilerplatePicker() end, {desc = "Boilerplate telescope picker"})
+
     end
 }

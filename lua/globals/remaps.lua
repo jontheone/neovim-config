@@ -31,3 +31,4 @@ vim.keymap.set('n', '<Leader>i', '=%', { noremap = true })
 vim.keymap.set('v', '<C-c>', '"+y', { noremap = true, silent = true })
 vim.keymap.set('t', '<esc><esc>', "<c-\\><c-n>", {})
 vim.keymap.set('n', '-', ':Explore<CR>', { desc = "bring netrw" })
+
