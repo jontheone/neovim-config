@@ -48,7 +48,7 @@ return {
                     cmd = {"cmake"},
                     args = {"--build", "build"},
                     components = { {"run_after",  detach = false, task_names = { "buildrun" } },
-                                   { "on_result_diagnostics_quickfix", open = true},
+                                   { "open_output", focust = true, on_start="always"},
                                    { "unique", replace = false },
                                    "default"}
 
@@ -61,7 +61,7 @@ return {
             builder = function()
                 return {
                     cmd = {"./build/app.exe"},
-                    components = { { "open_output", focus = true },
+                    components = { { "open_output", focus = true, on_start="always" },
                                    { "unique", replace = false },
                                    "default"}
                 }

@@ -6,7 +6,7 @@ return {
         local hp = require("harpoon")
         local set = vim.keymap.set
         hp:setup({})
-        set("n", "<leader>a", function() hp:list():add() end)
+        -- set("n", "<leader>a", function() hp:list():add() end)
         set("n", "<leader>b", function() hp.ui:toggle_quick_menu(hp:list()) end)
         set("n", "<leader>s", function()
             local list = hp:list():display()

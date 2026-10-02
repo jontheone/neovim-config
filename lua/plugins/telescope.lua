@@ -27,6 +27,7 @@ return {
         vim.keymap.set("n", "<Leader>fg", function() builtin.live_grep() end, {desc="search for list of buffers"})
         vim.keymap.set("n", "<Leader>fd", function() builtin.grep_string({search = vim.fn.input("grep > "), use_regex = true}) end, {desc="search for list of buffers"})
         vim.keymap.set("n", "<Leader>fs", function() builtin.lsp_documentn_symbols() end, {desc="Search document symbols"})
+        vim.keymap.set("n", "<Leader>ft", function() custom.TabePicker() end, {desc="Search document symbols"})
         vim.keymap.set("n", "<Leader>fsv", function() builtin.lsp_documentn_symbols({
             symbols = {"variable"}
         }) end, {desc="Search document symbols"})

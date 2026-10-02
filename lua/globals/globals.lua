@@ -33,3 +33,4 @@ vim.g.netrw_altv = 1
 local mingw_path = "C:/msys64/mingw64/bin" 
 local msys_bin = "C:/msys64/usr/bin"
 vim.env.PATH = mingw_path .. ";".. msys_bin .. ";" .. vim.env.PATH
+require("globals.customcommands")

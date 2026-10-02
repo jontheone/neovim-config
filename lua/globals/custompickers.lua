@@ -7,6 +7,36 @@ local previewers = require("telescope.previewers")
 local conf = require("telescope.config").values
 local make_entry = require("telescope.make_entry")
 
+
+local function get_tabs_info()
+  local tabs = {}
+  local current_tab = vim.api.nvim_get_current_tabpage()
+
+  for _, tabpage in ipairs(vim.api.nvim_list_tabpages()) do
+    local tab_num = vim.api.nvim_tabpage_get_number(tabpage)
+    local tab_id = tabpage -- Tabpage internal ID handle
+    local win = vim.api.nvim_tabpage_get_win(tabpage)
+    local bufnr = vim.api.nvim_win_get_buf(win)
+    local buf_name = vim.api.nvim_buf_get_name(bufnr)
+
+    local name = buf_name ~= "" and vim.fn.fnamemodify(buf_name, ":t") or "[No Name]"
+    local rel_path = buf_name ~= "" and vim.fn.fnamemodify(buf_name, ":~:.") or "[No Name]"
+    local is_current = (tabpage == current_tab)
+
+    table.insert(tabs, {
+      tabpage = tabpage,
+      tab_num = tab_num,
+      tab_id = tab_id,
+      bufnr = bufnr,
+      name = name,
+      path = rel_path,
+      is_current = is_current,
+    })
+  end
+
+  return tabs
+end
+
 local boilerplates = {
     {
         name = "CmakeList.txt",
@@ -72,21 +102,30 @@ add_executable(${PROJECT_NAME} ${SOURCES})
 target_include_directories(${PROJECT_NAME} PRIVATE 
     "${CMAKE_CURRENT_SOURCE_DIR}/include"
 )
-  
- 
-# Define Linking Directory
-# link_directories()
- 
+
+# Define path to runtime dependencies folder (relative to project root)
+set(DEPENDENCIES_DIR "${CMAKE_CURRENT_SOURCE_DIR}/dependencies")
+
+# Copy all contents from dependencies/ into the target binary directory during CMake Configure stage
+file(COPY "${DEPENDENCIES_DIR}/" DESTINATION "${CMAKE_RUNTIME_OUTPUT_DIRECTORY}")
+
+
 # Define Executable output 
 # set(CMAKE_RUNTIME_OUTPUT_DIRECTORY "../${CMAKE_SOURCE_DIR}")
- 
-# Find packages requires for linking
-# find_package(Qt6 REQUIRED COMPONENTS Widgets Core Gui)
-# find_package(OpenCV REQUIRED)
  
 # ------------------------------------------------------------------------------
 # Linking Libraries (-l flags)
 # ------------------------------------------------------------------------------
+
+# Define Linking Directory
+# link_directories()
+
+ 
+# Find packages requires for linking
+# find_package(Qt6 REQUIRED COMPONENTS Widgets Core Gui)
+# find_package(OpenCV REQUIRED)
+
+
 target_link_libraries(${PROJECT_NAME} PRIVATE
 
 )
@@ -258,6 +297,58 @@ M.BoilerplatePicker = function()
     end,
   }):find()
 end
+
+M.TabePicker = function()
+    opts = opts or {}
+  local tabs = get_tabs_info()
+
+  pickers.new(opts, {
+    prompt_title = "Select Tab",
+
+    finder = finders.new_table({
+      results = tabs,
+      entry_maker = function(entry)
+        local marker = entry.is_current and " (current)" or ""
+        local display_str = string.format("Tab #%d [ID: %d]: %s%s", entry.tab_num, entry.tab_id, entry.name, marker)
+        return {
+          value = entry,
+          display = display_str,
+          ordinal = string.format("%d %d %s", entry.tab_num, entry.tab_id, entry.name),
+        }
+      end,
+    }),
+
+    sorter = conf.generic_sorter(opts),
+
+    previewer = previewers.new_buffer_previewer({
+      title = "Tab Preview",
+      define_preview = function(self, entry)
+        local target_buf = entry.value.bufnr
+        if vim.api.nvim_buf_is_valid(target_buf) then
+          local lines = vim.api.nvim_buf_get_lines(target_buf, 0, -1, false)
+          vim.api.nvim_buf_set_lines(self.state.bufnr, 0, -1, false, lines)
+
+          local ft = vim.bo[target_buf].filetype
+          if ft and ft ~= "" then
+            vim.bo[self.state.bufnr].filetype = ft
+          end
+        end
+      end,
+    }),
+
+    attach_mappings = function(prompt_bufnr, map)
+      actions.select_default:replace(function()
+        actions.close(prompt_bufnr)
+        local selection = action_state.get_selected_entry()
+
+        if selection and selection.value.tabpage then
+          vim.api.nvim_set_current_tabpage(selection.value.tabpage)
+        end
+      end)
+      return true
+    end,
+  }):find()
+  end
 
 
 return M
